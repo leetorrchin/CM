@@ -1,0 +1,16 @@
+# docker compose up --build   then open http://localhost:8000
+services:
+  crowd:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CROWD_VENUE: example-minimal-festival
+      CROWD_SCENARIO: egress-end-of-night
+      CROWD_TOTAL: "3000"
+      CROWD_SPEED: "5"
+      CROWD_AUTOSTART: "1"
+    volumes:
+      # venues drawn in the editor survive restarts
+      - ./venues/user:/app/venues/user
+    restart: unless-stopped

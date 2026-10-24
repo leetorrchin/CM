@@ -19,3 +19,5 @@ runs/*
 # generated venues and scenarios (reproducible from a seed)
 venues/generated/
 scenarios/generated/
+venues/user/*
+!venues/user/.gitkeep

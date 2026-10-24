@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d5fd1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>crowD</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/nav.css">
+  <link rel="stylesheet" href="/src/app.css">
+</head>
+<body class="phone">
+  <div id="banner" hidden></div>
+  <section id="join" hidden>
+    <h1>crowD</h1>
+    <p class="muted">Find your way around the event and get moving guidance when it is busy.</p>
+    <div class="card">
+      <h3>Join</h3>
+      <label>Where are you now?<select id="where"></select></label>
+      <label>Where do you want to go?<select id="to"></select></label>
+      <button id="joinBtn" class="btn big" type="button">Start</button>
+      <p class="muted small">Demo build: your position is chosen here, not taken from GPS.</p>
+    </div>
+    <div class="card">
+      <h3>Or follow a simulated person</h3>
+      <p class="muted small">See what the app shows someone in the crowd.</p>
+      <ul id="people" class="list"></ul>
+    </div>
+    <p id="joinErr" class="err" hidden></p>
+    <p class="small"><a href="/">All crowD pages</a></p>
+  </section>
+  <section id="main" hidden>
+    <div id="instr" class="card instr"><div id="iTitle" class="big-title"></div><div id="iDetail"></div></div>
+    <div class="view" id="map"><canvas id="cv"></canvas></div>
+    <div class="card">
+      <dl id="facts"></dl>
+      <label id="destRow" class="destrow">Change destination<select id="dest"></select></label>
+      <ul id="closedList" class="small"></ul>
+      <button id="leave" class="btn alt" type="button">Leave</button>
+    </div>
+  </section>
+  <script type="module" src="/src/app.ts"></script>
+</body>
+</html>

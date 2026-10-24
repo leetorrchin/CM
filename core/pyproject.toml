@@ -3,7 +3,7 @@ name = "crowd-core"
 version = "0.0.0"
 description = "crowD core"
 requires-python = ">=3.10"
-dependencies = ["jsonschema>=4.18", "networkx>=3.0"]
+dependencies = ["jsonschema>=4.18", "networkx>=3.0", "ortools>=9.10"]
 
 [build-system]
 requires = ["hatchling"]

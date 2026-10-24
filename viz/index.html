@@ -3,43 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>crowD viewer</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <title>crowD</title>
   <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/nav.css">
+  <style>
+    body { max-width: 880px; margin: 0 auto; }
+    .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); padding: 0 16px; }
+    .cards a.card { text-decoration: none; color: inherit; display: block; }
+    .cards a.card:hover { border-color: var(--accent); }
+    .cards h3 { font-size: 15px; } .cards p { margin: 4px 0 0; color: var(--muted); }
+    .hero { padding: 24px 16px 8px; } .hero h2 { margin: 0 0 4px; font-size: 22px; }
+    code { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); padding: 1px 5px; border-radius: 4px; }
+    #status { margin: 12px 16px; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>crowD <span>run viewer</span></h1>
-    <div class="toolbar">
-      <label class="btn">Open files<input id="files" type="file" multiple accept=".json,.jsonl" hidden></label>
-      <span id="repoLoad" hidden>
-        <select id="repoVenue" aria-label="Venue from repo"></select>
-        <select id="repoRun" aria-label="Run from repo"></select>
-        <button id="repoAdd" class="btn" type="button">Add run</button>
-      </span>
-      <label>Level <select id="level"><option value="all">All</option></select></label>
-      <label class="check"><input id="labels" type="checkbox" checked> Names</label>
-    </div>
-  </header>
-  <div id="msg" role="status" hidden></div>
-  <main>
-    <section id="views">
-      <div id="empty">
-        <p>Open a venue file (<code>venues/*.json</code>) and one or more run logs (<code>runs/*.jsonl</code>), or drop them here.</p>
-        <p>Add two runs of the same venue to compare them side by side.</p>
-      </div>
-    </section>
-    <aside id="panel" aria-label="Run details"></aside>
-  </main>
-  <footer>
-    <button id="play" class="btn" type="button" aria-label="Play or pause">Play</button>
-    <select id="speed" aria-label="Playback speed">
-      <option value="1">1x</option><option value="2">2x</option><option value="5" selected>5x</option>
-      <option value="10">10x</option><option value="30">30x</option><option value="60">60x</option>
-    </select>
-    <div id="scrub"><input id="range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Time"><div id="ticks"></div></div>
-    <span id="clock">0:00 / 0:00</span>
-  </footer>
-  <div id="tip" hidden></div>
-  <script type="module" src="/src/main.ts"></script>
+  <div class="hero">
+    <h2>crowD</h2>
+    <p class="muted">Guides crowds through event spaces: shorter queues, groups kept together, faster evacuation.</p>
+  </div>
+  <div id="status" class="card">Checking the server…</div>
+  <div class="cards">
+    <a class="card" href="/live.html"><h3>Control room</h3><p>Live map, queues, switch to evacuation, close gates.</p></a>
+    <a class="card" href="/app.html"><h3>Attendee app</h3><p>What a visitor's phone shows. Open on your phone: <code id="url"></code></p></a>
+    <a class="card" href="/editor.html"><h3>Venue editor</h3><p>Draw zones, gates and places, then try the venue live.</p></a>
+    <a class="card" href="/viewer.html"><h3>Run viewer</h3><p>Replay and compare saved simulation runs.</p></a>
+  </div>
+  <script type="module">
+    document.getElementById("url").textContent = location.origin + "/app.html";
+    fetch("/api/health").then((r) => r.json()).then((h) => {
+      const s = h.session, el = document.getElementById("status");
+      el.textContent = s ? `Server running. Live session: ${s.scenario} on ${s.venue}, ${s.people.toLocaleString()} people, ${s.planner} planner.` : "Server running. No session yet: start one in the control room.";
+    }).catch(() => { document.getElementById("status").textContent = "Server not reachable. Start it with ./run.sh (see README)."; });
+  </script>
 </body>
 </html>

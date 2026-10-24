@@ -1,12 +1,19 @@
 import { bounds, centroid, polygonArea, pointInPolygon, Transform } from "./geom";
 import { densityColor } from "./colors";
 import { sampleAt } from "./interp";
-import type { Pt, RunLog, Venue, Zone, ZoneState } from "./types";
+import type { Pt, RunLog, Threshold, Venue, Zone, ZoneState } from "./types";
 
 // Same placeholder as core/src/crowd_core/config.py DEFAULT_MAX_DENSITY_PP_M2.
 const DEFAULT_MAX_DENSITY = 3.0;
 
-export interface DrawOptions { level: string; labels: boolean; dark: boolean; wall: number }
+export interface DrawOptions {
+  level: string; labels: boolean; dark: boolean; wall: number;
+  /** Drawn on top of the map, before the heading. */
+  overlay?: (ctx: CanvasRenderingContext2D, view: RunView) => void;
+  heading?: boolean;
+  /** Show people counts in zones (default true). */
+  numbers?: boolean;
+}
 
 interface ZoneInfo { z: Zone; area: number; cen: Pt; maxDensity: number }
 
@@ -30,7 +37,9 @@ export function parseEdgeKey(key: string): { tid: string; from: string; to: stri
 export class RunView {
   info = new Map<string, ZoneInfo>();
   private elevation = new Map<string, number>();
-  private tr: Transform;
+  /** People in or walking through each zone at the last draw (waiting plus half of each crossing). */
+  lastCounts: Record<string, number> = {};
+  tr: Transform;
   private w = 0;
   private h = 0;
 
@@ -68,6 +77,21 @@ export class RunView {
     return undefined;
   }
 
+  /** Nearest threshold within `max` pixels of a screen point. */
+  thresholdAt(px: number, py: number, level: string, max = 14): Threshold | undefined {
+    let best: Threshold | undefined, bd = max;
+    for (const th of this.venue.thresholds) {
+      const a = this.info.get(th.from_zone)?.z, b = this.info.get(th.to_zone)?.z;
+      if (!a || !b || !(this.visible(a, level) && this.visible(b, level))) continue;
+      const [p, q] = th.segment.map((pt) => this.tr.toScreen(pt[0], pt[1]));
+      const dx = q[0] - p[0], dy = q[1] - p[1], l2 = dx * dx + dy * dy || 1;
+      const f = Math.max(0, Math.min(1, ((px - p[0]) * dx + (py - p[1]) * dy) / l2));
+      const d = Math.hypot(px - (p[0] + f * dx), py - (p[1] + f * dy));
+      if (d < bd) { bd = d; best = th; }
+    }
+    return best;
+  }
+
   draw(t: number, o: DrawOptions): void {
     const ctx = this.canvas.getContext("2d")!;
     const dpr = window.devicePixelRatio || 1;
@@ -75,12 +99,21 @@ export class RunView {
     ctx.fillStyle = css("--map-bg");
     ctx.fillRect(0, 0, this.w, this.h);
     const s = this.stateAt(t);
+    // In this model people only count as "in a zone" while waiting, so also share those crossing a
+    // threshold between the two zones it joins. Otherwise a moving crowd looks like an empty venue.
+    const cnt: Record<string, number> = { ...s.zones };
+    for (const [key, n] of Object.entries(s.transit)) {
+      const { from, to } = parseEdgeKey(key);
+      cnt[from] = (cnt[from] ?? 0) + n / 2;
+      cnt[to] = (cnt[to] ?? 0) + n / 2;
+    }
+    this.lastCounts = cnt;
     const line = css("--line"), text = css("--text"), muted = css("--muted");
 
     // zones
     for (const { z, area, maxDensity } of this.info.values()) {
       if (!this.visible(z, o.level)) continue;
-      const n = s.zones[z.id] ?? 0;
+      const n = cnt[z.id] ?? 0;
       ctx.beginPath();
       z.polygon.forEach((p, i) => {
         const [x, y] = this.tr.toScreen(p[0], p[1]);
@@ -102,17 +135,19 @@ export class RunView {
       if (!this.visible(z, o.level)) continue;
       const xs = z.polygon.map((p) => this.tr.toScreen(p[0], p[1])[0]);
       const wpx = Math.max(...xs) - Math.min(...xs);
-      if (wpx < 56) continue;
+      if (wpx < (o.labels ? 40 : 56)) continue;
       const [cx, cy] = this.tr.toScreen(cen[0], cen[1]);
       ctx.fillStyle = text;
       ctx.font = "600 12px system-ui, sans-serif";
-      const n = Math.round(s.zones[z.id] ?? 0);
+      const n = Math.round(cnt[z.id] ?? 0);
       if (o.labels) {
         const name = fit(ctx, z.name ?? z.id, wpx - 10);
         ctx.fillText(name, cx, cy - 8);
-        ctx.font = "12px system-ui, sans-serif";
-        ctx.fillText(n.toLocaleString(), cx, cy + 8);
-      } else {
+        if (o.numbers !== false) {
+          ctx.font = "12px system-ui, sans-serif";
+          ctx.fillText(n.toLocaleString(), cx, cy + 8);
+        }
+      } else if (o.numbers !== false) {
         ctx.fillText(n.toLocaleString(), cx, cy);
       }
     }
@@ -174,6 +209,8 @@ export class RunView {
       ctx.fillText(Math.round(n).toLocaleString(), cx, cy);
     }
 
+    o.overlay?.(ctx, this);
+    if (o.heading === false) return;
     // heading
     ctx.textAlign = "left";
     ctx.textBaseline = "top";

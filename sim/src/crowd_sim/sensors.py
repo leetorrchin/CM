@@ -132,26 +132,27 @@ class AppPositionEmulator:
         self.err_sum = 0.0
 
     def observe(self, sim, t: float) -> list[tuple[str, dict]]:
-        pool = [p for p in sim.people if p.has_app and p.state in ("wait", "undecided", "stuck", "queued", "done")]
+        pool = [(m, u) for u in sim.units if u.state in ("wait", "undecided", "stuck", "queued", "done")
+                for m in u.members if m.has_app]
         if not pool:
             return []
         out = []
-        for p in self.rng.sample(pool, min(self.sample_size, len(pool))):
+        for p, unit in self.rng.sample(pool, min(self.sample_size, len(pool))):
             cached = self.true_pos.get(p.id)
-            if cached is None or cached[0] != p.zone:
-                z = self.zones[p.zone]
-                cached = (p.zone, random_point_in_polygon(z["polygon"], self.rng))
+            if cached is None or cached[0] != unit.zone:
+                z = self.zones[unit.zone]
+                cached = (unit.zone, random_point_in_polygon(z["polygon"], self.rng))
                 self.true_pos[p.id] = cached
             if self.rng.random() < self.dropout:
                 self.dropped += 1
                 continue
             x, y = cached[1]
             nx, ny = x + self.rng.gauss(0, self.sigma), y + self.rng.gauss(0, self.sigma)
-            level = self.zones[p.zone]["level"]
+            level = self.zones[unit.zone]["level"]
             snapped = snap_to_zone(self.venue, nx, ny, level)
             self.reports += 1
             self.err_sum += math.hypot(nx - x, ny - y)
-            self.wrong += snapped != p.zone
+            self.wrong += snapped != unit.zone
             if self.emit_updates:
                 out.append(("position_update", {
                     "schema_version": SCHEMA_VERSION, "entity_id": p.id, "timestamp": sim.clock.iso(t),

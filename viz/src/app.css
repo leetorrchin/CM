@@ -1,0 +1,19 @@
+body.phone { display: block; max-width: 560px; margin: 0 auto; padding: env(safe-area-inset-top) 16px 24px; }
+body.phone h1 { margin: 16px 0 4px; font-size: 22px; }
+body.phone section { display: flex; flex-direction: column; gap: 12px; }
+body.phone label { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; color: var(--muted); }
+body.phone select { font-size: 16px; padding: 8px; color: var(--text); }
+.btn.big { width: 100%; padding: 12px; font-size: 16px; margin-top: 6px; }
+#banner { position: sticky; top: 0; z-index: 5; margin: 0 -16px; padding: 10px 16px; font-weight: 700; text-align: center; background: var(--accent); color: #fff; }
+#banner.evac { background: var(--bad); }
+.instr { padding: 14px; }
+.instr.evac { border-color: var(--bad); border-width: 2px; }
+.instr.ok { border-color: #2e8b57; border-width: 2px; }
+.big-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+#map { height: min(48vh, 380px); min-height: 220px; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { margin: 0; }
+.list button { width: 100%; text-align: left; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; margin: 4px 0; font: inherit; cursor: pointer; }
+.err { color: var(--bad); }
+#closedList { margin: 8px 0; padding-left: 18px; color: var(--bad); }
+.destrow { margin-top: 12px; }

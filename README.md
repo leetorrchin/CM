@@ -4,7 +4,38 @@ An algorithmic manager that determines the optimal flow of entities given their 
 
 crowD takes a drawn-out event space and a live picture of how full it is, then works out where people should go next so the crowd as a whole moves efficiently and safely. Think of it as traffic management for people. The first target is a large concert or festival, for both everyday flow (arrivals, stage changes, exits) and evacuation.
 
-> Status: Phase 0 (spec). Repo structure, JSON Schemas, an example multi-level venue, three scenarios, a venue graph compiler, a baseline shortest-path router a zone-level crowd simulator that writes replayable event logs, a procedural venue generator, emulated sensors and a run viewer are in place. See [PLAN.md](PLAN.md) for the build plan and milestones.
+> Status: **MVP.** A working end-to-end demo: a realtime server, an organiser control room, a phone web app for attendees, and a venue editor, all driven by a built-in crowd simulator. See [Quick start](#quick-start) and [MVP scope and limits](#mvp-scope-and-limits). The build plan is in [PLAN.md](PLAN.md).
+
+## Quick start
+
+Needs [uv](https://docs.astral.sh/uv/) and Node 20 or newer (`brew install uv node` on macOS). Then:
+
+```
+./run.sh
+```
+
+It installs packages, builds the web apps and starts the server. Open:
+
+| Page | Address | For |
+|---|---|---|
+| Control room | http://localhost:8000/live.html | Watch the crowd, switch mode, close gates, restart the session |
+| Attendee app | http://localhost:8000/app.html | A phone view: your route, queue and group. On a phone use the address `run.sh` prints (same Wi-Fi) |
+| Venue editor | http://localhost:8000/editor.html | Draw zones, gates and places, then press "Try it" |
+| Run viewer | http://localhost:8000/viewer.html | Replay saved simulation runs |
+
+Prefer Docker? `docker compose up --build`, then open http://localhost:8000. Venues you draw are kept in `venues/user/`.
+
+A 60 second tour: open the control room, press **Evacuate** twice (it asks you to confirm), click a gate on the map to close it, and watch the queues reroute. Open the attendee app in another tab, press Start, and see the instruction change to an evacuation route.
+
+## MVP scope and limits
+
+In the MVP: the realtime server (REST and WebSocket), the control room, the attendee web app (installable on a phone), the venue editor, three planners (queue-aware, flow, adaptive) plus the baseline, and an emulated crowd with groups.
+
+Not in the MVP, and worth knowing before anyone relies on it:
+- **The crowd is simulated.** Attendee positions on a real phone are picked from a list, not taken from GPS or Wi-Fi. Real positioning, camera and turnstile connectors, and sensor fusion are future work (the sensor emulators and schemas exist).
+- **One live session at a time, no accounts or logins.** Anyone who can reach the server can control it. Keep it on a trusted network.
+- **Not safety certified.** Do not use it to guide a real evacuation.
+- Planner settings are tuned on generated venues only. Numbers are in [docs/benchmarks.md](docs/benchmarks.md).
 
 ## What it does
 
@@ -165,18 +196,18 @@ See [PLAN.md](PLAN.md) for details. In short:
 
 ## Getting started
 
-Needs [uv](https://docs.astral.sh/uv/).
+See [Quick start](#quick-start). For development:
 
 ```
 uv sync --all-packages
-uv run pytest
-uv run python -m crowd_core.venue venues/example-minimal-festival.json
-uv run python -m crowd_sim.run --venue venues/example-minimal-festival.json --scenario scenarios/egress-end-of-night.json
+uv run pytest                                             # Python tests
+cd viz && npm install && npm test                         # web tests
+./run.sh dev                                              # server plus hot reload on :5173
+uv run python -m crowd_sim.run --venue venues/example-minimal-festival.json --scenario scenarios/egress-end-of-night.json --planner adaptive
 uv run python -m crowd_sim.venuegen --seed 7 --stages 4   # generate a venue and its scenarios
-cd viz && npm install && npm run dev                      # watch runs in the browser
 ```
 
-Layout and dependency rules are in [docs/architecture.md](docs/architecture.md). Design decisions are logged in [docs/decisions.md](docs/decisions.md).
+The server API is described in [docs/api.md](docs/api.md). Layout and dependency rules are in [docs/architecture.md](docs/architecture.md). Design decisions are logged in [docs/decisions.md](docs/decisions.md). A manual test guide is in [test.md](test.md).
 
 ## Contributing
 

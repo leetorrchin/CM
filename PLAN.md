@@ -131,6 +131,9 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 - **Done when:** baseline results are reproducible from a seed, congestion at the bottlenecks is visible in the visualiser, and swapping the emulated position source for a stub "real" one needs no changes outside configuration.
 
 ### Phase 3: Optimiser, groups and evacuation (4 to 6 weeks)
+
+**Progress:** groups-as-units, queue switching, queue-aware and flow planners, adaptive mode switching and the benchmark are done. Tuning and a 50,000-person scale test are done (decision 021). Left: hazards, fallback plan generator, cohesion cost measurement.
+
 - Solver steps 2 to 4, behind one interface so they can be swapped in the simulator.
 - Rolling horizon re-planning loop.
 - Group handling as super-entities, with the soft cohesion penalty.
@@ -197,9 +200,13 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 | Simulation does not match real crowd behaviour | Results look good in sim and fail in reality | Start from established density and speed relationships, vary behaviour parameters widely, test robustness not just averages, calibrate with real data from drills when possible |
 | Venue drawing is tedious | Nobody uses the editor | Trace over site plan images, sensible defaults for capacity |
 
+## MVP status (2026-10-24)
+
+Built: realtime server, control room, attendee web app, venue editor, Docker and one-command start (see README). Still to do for a real pilot: real positioning (GPS, Wi-Fi, BLE) and camera or turnstile connectors with sensor fusion, accounts and access control, multiple sessions, hazards and a fallback plan generator, an arrivals scenario, and calibration against real crowd data.
+
 ## Immediate next steps
 
 1. Done: example festival venue and the three scenarios (`scenarios/`).
 2. Write the venue schema and one example venue by hand, including the occupancy reading and group data models. (Done: see `schemas/` and `venues/`.)
 3. Repo skeleton (done: `schemas/`, `core/`, `sim/`, `connectors/`, `server/`, `docs/`). Still to do: CI running tests, and `viz/` project setup.
-4. Done: graph compiler and baseline router (`core/`), clock, event log, the first emulated crowd, venue generator and sensors (`sim/`), and the run viewer (`viz/`). Next: Phase 3, the congestion-aware optimiser, starting with a time-expanded flow planner for a single destination, benchmarked against the baseline on generated venues.
+4. Done: graph compiler and baseline router (`core/`), clock, event log, the first emulated crowd, venue generator and sensors (`sim/`), and the run viewer (`viz/`). Phase 3 is largely built: unit-based groups, queue switching, queue-aware, flow and adaptive planners (`core/optimiser.py`), and a benchmark (`docs/benchmarks.md`). Next: hazards, a fallback plan generator, a cohesion-cost measurement in normal mode, and an arrivals scenario for turnstiles.

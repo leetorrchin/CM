@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from crowd_core.graph import compile_venue
+from crowd_core.optimiser import AdaptivePlanner, FlowPlanner, QueueAwarePlanner
 from crowd_core.planner import BaselinePlanner
 from crowd_core.scenario import load_scenario
 from crowd_core.venue import load_venue
@@ -15,7 +16,8 @@ from .engine import Simulation
 from .eventlog import EventLog
 from .sensors import DEFAULT_CONFIG, build_sensors
 
-PLANNERS = {"baseline": BaselinePlanner}
+PLANNERS = {"baseline": BaselinePlanner, "queue-aware": QueueAwarePlanner, "flow": FlowPlanner,
+            "adaptive": AdaptivePlanner}
 
 
 def run_scenario(venue_path, scenario_path, *, planner="baseline", out=None, validate_log=False,

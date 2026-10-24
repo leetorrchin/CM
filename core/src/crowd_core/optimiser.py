@@ -16,8 +16,15 @@ import math
 from ortools.graph.python import min_cost_flow
 
 from .graph import VenueGraph
-from .macro import (Net, Subject, all_or_nothing, assign, build_subjects, class_targets,
-                    reverse_dijkstra)
+from .macro import (
+    Net,
+    Subject,
+    all_or_nothing,
+    assign,
+    build_subjects,
+    class_targets,
+    reverse_dijkstra,
+)
 from .planner import SCHEMA_VERSION
 from .state import LiveState
 

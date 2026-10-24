@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from crowd_sim.run import run_scenario
 
 ROOT = Path(__file__).resolve().parents[2]

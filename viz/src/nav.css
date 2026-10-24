@@ -17,3 +17,10 @@ input[type=text], input[type=number] { font: inherit; color: var(--text); backgr
 .pill.bad { background: color-mix(in srgb, var(--bad) 18%, var(--surface)); color: var(--bad); }
 .muted { color: var(--muted); } .small { font-size: 12px; }
 [hidden] { display: none !important; }
+
+#sessions.list { list-style: none; margin: 0 0 8px; padding: 0; }
+#sessions.list li { display: flex; gap: 6px; align-items: center; }
+#sessions.list button { flex: 1; text-align: left; padding: 8px 10px; border: 1px solid var(--line, #8884); border-radius: 8px; background: var(--surface); color: inherit; cursor: pointer; margin: 2px 0; }
+#sessions.list button.on { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.joinbox { margin: 8px 0; padding: 10px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.joinbox .code { font-size: 34px; font-weight: 700; letter-spacing: 0.18em; font-variant-numeric: tabular-nums; }

@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from crowd_core.graph import compile_venue
 from crowd_core.optimiser import AdaptivePlanner, FlowPlanner, QueueAwarePlanner
 from crowd_core.schemas import schema_errors

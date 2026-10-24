@@ -17,3 +17,6 @@ body.phone select { font-size: 16px; padding: 8px; color: var(--text); }
 .err { color: var(--bad); }
 #closedList { margin: 8px 0; padding-left: 18px; color: var(--bad); }
 .destrow { margin-top: 12px; }
+body.phone label.check { flex-direction: row; align-items: center; }
+body.phone input[type="text"], body.phone #codeIn { padding: 10px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+#tapBtn.on { outline: 2px solid var(--accent); }

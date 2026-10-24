@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1.0",
+  "id": "gate-failure-egress",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "End of night. The south exit lane is shut by a fault four minutes in and reopens at 15 minutes.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 2400,
+  "mode": "egress",
+  "crowd": {
+    "total": 8000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.6
+      },
+      {
+        "zone": "main_field",
+        "share": 0.25
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.15
+      }
+    ],
+    "destinations": [
+      {
+        "id": "exit_south",
+        "share": 0.55
+      },
+      {
+        "id": "exit_north",
+        "share": 0.45
+      }
+    ]
+  },
+  "events": [
+    {
+      "at_s": 240,
+      "type": "closure",
+      "threshold": "t_field_exit_south"
+    },
+    {
+      "at_s": 900,
+      "type": "reopen",
+      "threshold": "t_field_exit_south"
+    }
+  ]
+}

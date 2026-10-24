@@ -1,4 +1,4 @@
-import { api, dark, esc, getVenue, mmss, socket, type LiveMsg } from "./api";
+import { api, dark, esc, getVenue, logout, mmss, socket, type LiveMsg, type SessionInfo } from "./api";
 import { parseEdgeKey, RunView } from "./render";
 import type { RunLog, Venue } from "./types";
 
@@ -9,6 +9,12 @@ let venue: Venue | null = null;
 let view: RunView | null = null;
 let msg: LiveMsg | null = null;
 let armed = 0;
+let sid = "";
+let sessions: SessionInfo[] = [];
+let stopSocket: (() => void) | null = null;
+const SID_KEY = "crowd.sid";
+const keep = <T>(f: () => T): void => { try { f(); } catch { /* storage blocked */ } };
+const base = () => `/api/sessions/${encodeURIComponent(sid)}`;
 const log: RunLog = { runId: "live", venueId: "", planner: "", scenario: "", states: [], events: [], metrics: null, duration: 0 };
 
 function say(text: string | null): void {
@@ -21,7 +27,7 @@ async function act<T>(p: Promise<T>): Promise<void> {
 }
 
 async function setVenue(id: string): Promise<void> {
-  venue = await getVenue(id);
+  venue = sid ? await api<Venue>(`${base()}/venue`) : await getVenue(id);
   log.venueId = id;
   view = new RunView($("cv") as HTMLCanvasElement, venue, log);
 }
@@ -44,7 +50,7 @@ function renderPanel(): void {
   $("stats").innerHTML = [
     ["People", fmt(msg.people)], ["Out of the venue", fmt(msg.cleared)], ["Still moving", fmt(msg.active)],
     ["Waiting at gates", fmt(queued)], ["Crossing gates", fmt(transit)], ["In zones", fmt(inZones)],
-    ["Queue switches", fmt(msg.queue_switches)], ["Redirected", fmt(msg.redirected)], ["Planner", esc(msg.planner)],
+    ["Phones joined", fmt(msg.guests ?? 0)], ["Queue switches", fmt(msg.queue_switches)], ["Redirected", fmt(msg.redirected)], ["Planner", esc(msg.planner)],
   ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   const top = Object.entries(msg.queues).sort((a, b) => b[1] - a[1]).slice(0, 5);
   $("queues").innerHTML = top.length
@@ -67,7 +73,8 @@ function frame(ts: number): void {
 }
 
 async function onMsg(m: any): Promise<void> {
-  if (m.type !== "state") return;
+  if (m.type === "ended") { await refreshSessions(); return; }
+  if (m.type !== "state" || m.id !== sid) return;
   if (!venue || venue.id !== m.venue) await setVenue(m.venue);
   msg = m;
   renderPanel();
@@ -84,14 +91,58 @@ async function fillSession(): Promise<void> {
     $("scSel").innerHTML = sc.map((s) => `<option>${esc(s)}</option>`).join("");
   };
   vs.onchange = fillScenarios;
-  const cur = await api<{ session: { venue: string; scenario: string } | null }>("/api/health");
-  if (cur.session) vs.value = cur.session.venue;
   await fillScenarios();
-  if (cur.session) ($("scSel") as HTMLSelectElement).value = cur.session.scenario;
+}
+
+function renderSessions(): void {
+  $("sessions").innerHTML = sessions.map((s) =>
+    `<li><button type="button" data-sid="${esc(s.id)}" class="${s.id === sid ? "on" : ""}"><b>${esc(s.id)}</b> ${esc(s.name)}<br><small class="muted">${fmt(s.people)} people · ${esc(s.mode)}${s.paused ? " · paused" : ""}</small></button></li>`).join("");
+  $("noSession").hidden = sessions.length > 0;
+  const cur = sessions.find((s) => s.id === sid);
+  $("joinBox").hidden = !cur;
+  $("del").hidden = !cur;
+  if (cur) {
+    $("code").textContent = cur.id;
+    $("appUrl").textContent = `${location.origin}/app.html?s=${cur.id}`;
+    $("guestInfo").textContent = `${cur.guests} phone${cur.guests === 1 ? "" : "s"} joined${cur.demo_people ? " · demo people on" : ""}${cur.recording ? " · recording" : ""}`;
+  }
+}
+
+function select(id: string): void {
+  stopSocket?.();
+  stopSocket = null;
+  sid = id;
+  msg = null;
+  venue = null;
+  view = null;
+  keep(() => id ? localStorage.setItem(SID_KEY, id) : localStorage.removeItem(SID_KEY));
+  history.replaceState(null, "", id ? `?s=${encodeURIComponent(id)}` : location.pathname);
+  renderSessions();
+  if (!id) return;
+  stopSocket = socket(`/ws/sessions/${encodeURIComponent(id)}`, (m) => void onMsg(m), (up) => {
+    const c = $("conn");
+    c.textContent = up ? "live" : "reconnecting";
+    c.classList.toggle("bad", !up);
+  });
+}
+
+async function refreshSessions(): Promise<void> {
+  try { sessions = await api<SessionInfo[]>("/api/sessions"); } catch { return; }
+  if (!sessions.some((s) => s.id === sid)) {
+    const want = new URLSearchParams(location.search).get("s") ?? (() => { try { return localStorage.getItem(SID_KEY) ?? ""; } catch { return ""; } })();
+    select(sessions.find((s) => s.id === want)?.id ?? sessions[0]?.id ?? "");
+  } else renderSessions();
 }
 
 function wire(): void {
-  $("appUrl").textContent = `${location.origin}/app.html`;
+  $("sessions").addEventListener("click", (e) => {
+    const id = (e.target as HTMLElement).closest("button")?.dataset.sid;
+    if (id && id !== sid) select(id);
+  });
+  $("del").onclick = () => {
+    if (!sid || !confirm(`Stop event ${sid}? Phones that joined will be disconnected.`)) return;
+    void act(api(base(), undefined, "DELETE").then(refreshSessions));
+  };
   $("modes").addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest("button");
     if (!b) return;
@@ -106,26 +157,33 @@ function wire(): void {
       b.textContent = "Evacuate";
     }
     armed = 0;
-    void act(api("/api/control/mode", { mode }));
+    void act(api(`${base()}/mode`, { mode }));
   });
-  $("restart").onclick = () => void act(api("/api/session/restart", {}));
-  $("pause").onclick = () => void act(api("/api/session/pause", { paused: !msg?.paused }));
-  ($("speed") as HTMLSelectElement).onchange = (e) => void act(api("/api/session/speed", { speed: Number((e.target as HTMLSelectElement).value) }));
+  $("restart").onclick = () => void act(api(`${base()}/restart`, {}));
+  $("pause").onclick = () => void act(api(`${base()}/pause`, { paused: !msg?.paused }));
+  ($("speed") as HTMLSelectElement).onchange = (e) => void act(api(`${base()}/speed`, { speed: Number((e.target as HTMLSelectElement).value) }));
   $("closed").addEventListener("click", (e) => {
     const id = (e.target as HTMLElement).dataset.reopen;
-    if (id) void act(api("/api/control/closure", { threshold: id, closed: false }));
+    if (id) void act(api(`${base()}/closure`, { threshold: id, closed: false }));
   });
-  $("start").onclick = () => void act(api("/api/session", {
-    venue: ($("venueSel") as HTMLSelectElement).value, scenario: ($("scSel") as HTMLSelectElement).value,
-    planner: ($("plSel") as HTMLSelectElement).value, total: Number(($("total") as HTMLInputElement).value) || undefined,
-    speed: msg?.speed ?? 5,
-  }));
+  $("start").onclick = () => void act((async () => {
+    const created = await api<SessionInfo>("/api/sessions", {
+      name: ($("evName") as HTMLInputElement).value.trim(),
+      venue: ($("venueSel") as HTMLSelectElement).value, scenario: ($("scSel") as HTMLSelectElement).value,
+      planner: ($("plSel") as HTMLSelectElement).value, total: Number(($("total") as HTMLInputElement).value) || undefined,
+      speed: msg?.speed ?? 5, demo_people: ($("demoPeople") as HTMLInputElement).checked, record: ($("rec") as HTMLInputElement).checked,
+    });
+    await refreshSessions();
+    select(created.id);
+    ($("newCard") as HTMLDetailsElement).open = false;
+  })());
+  $("logout").onclick = (e) => { e.preventDefault(); logout(); };
   const cv = $("cv") as HTMLCanvasElement;
   cv.addEventListener("click", (e) => {
     if (!view || !msg) return;
     const r = cv.getBoundingClientRect();
     const th = view.thresholdAt(e.clientX - r.left, e.clientY - r.top, "all");
-    if (th) void act(api("/api/control/closure", { threshold: th.id, closed: !msg.closed.includes(th.id) }));
+    if (th) void act(api(`${base()}/closure`, { threshold: th.id, closed: !msg.closed.includes(th.id) }));
   });
   const tip = $("tip");
   cv.addEventListener("mousemove", (e) => {
@@ -145,10 +203,13 @@ function wire(): void {
 }
 
 wire();
-socket("/ws/live", (m) => void onMsg(m), (up) => {
-  const c = $("conn");
-  c.textContent = up ? "live" : "reconnecting";
-  c.classList.toggle("bad", !up);
-});
-void fillSession().catch((e) => say(`Could not reach the server: ${(e as Error).message}`));
+void (async () => {
+  try {
+    const h = await api<{ auth: boolean }>("/api/health");
+    $("logout").hidden = !h.auth;
+    await fillSession();
+    await refreshSessions();
+    setInterval(() => void refreshSessions(), 4000);
+  } catch (e) { say(`Could not reach the server: ${(e as Error).message}`); }
+})();
 requestAnimationFrame(frame);

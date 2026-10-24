@@ -26,15 +26,24 @@
   <div id="status" class="card">Checking the server…</div>
   <div class="cards">
     <a class="card" href="/live.html"><h3>Control room</h3><p>Live map, queues, switch to evacuation, close gates.</p></a>
-    <a class="card" href="/app.html"><h3>Attendee app</h3><p>What a visitor's phone shows. Open on your phone: <code id="url"></code></p></a>
+    <a class="card" href="/app.html"><h3>Attendee app</h3><p>What a visitor's phone shows. They join with an event code at <code id="url"></code></p></a>
     <a class="card" href="/editor.html"><h3>Venue editor</h3><p>Draw zones, gates and places, then try the venue live.</p></a>
     <a class="card" href="/viewer.html"><h3>Run viewer</h3><p>Replay and compare saved simulation runs.</p></a>
   </div>
   <script type="module">
     document.getElementById("url").textContent = location.origin + "/app.html";
-    fetch("/api/health").then((r) => r.json()).then((h) => {
-      const s = h.session, el = document.getElementById("status");
-      el.textContent = s ? `Server running. Live session: ${s.scenario} on ${s.venue}, ${s.people.toLocaleString()} people, ${s.planner} planner.` : "Server running. No session yet: start one in the control room.";
+    Promise.all([fetch("/api/health").then((r) => r.json()), fetch("/api/join/DEMO").then((r) => r.ok ? r.json() : null).catch(() => null)]).then(([h, demo]) => {
+      const el = document.getElementById("status");
+      el.innerHTML = "";
+      const t = document.createElement("div");
+      t.textContent = `Server running. ${h.sessions} event${h.sessions === 1 ? "" : "s"} live.` + (h.auth ? " Organiser pages need a sign in." : " Sign in is switched off.");
+      el.appendChild(t);
+      if (demo) {
+        const a = document.createElement("a");
+        a.href = "/app.html?s=" + encodeURIComponent(demo.id);
+        a.textContent = `Try the demo event on this device (code ${demo.id})`;
+        el.appendChild(a);
+      }
     }).catch(() => { document.getElementById("status").textContent = "Server not reachable. Start it with ./run.sh (see README)."; });
   </script>
 </body>

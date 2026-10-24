@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>crowD sign in</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/nav.css">
+  <style>
+    main.login { display:block; max-width:360px; margin:12vh auto; padding:0 16px; }
+    main.login label { display:block; margin:12px 0 0; }
+    main.login input { width:100%; box-sizing:border-box; padding:10px; font-size:16px; }
+    main.login .btn { width:100%; margin-top:18px; padding:12px; }
+  </style>
+</head>
+<body>
+  <main class="login">
+    <h1>crowD</h1>
+    <p class="muted">Organiser sign in. Attendees do not need an account: they join with an event code.</p>
+    <form id="f">
+      <label>Username<input id="u" autocomplete="username" required></label>
+      <label>Password<input id="p" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <div id="msg" role="alert" hidden></div>
+    <p class="small"><a href="/app.html">Join an event as an attendee</a></p>
+  </main>
+  <script type="module" src="/src/login.ts"></script>
+</body>
+</html>

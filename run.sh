@@ -42,8 +42,9 @@ fi
 IP="$(lan_ip || true)"
 echo
 echo "crowD is starting."
+echo "  Sign in:        http://localhost:$PORT/login.html  (admin password is printed below on first start)"
 echo "  Control room:   http://localhost:$PORT/live.html"
 echo "  Venue editor:   http://localhost:$PORT/editor.html"
-[ -n "$IP" ] && echo "  On your phone (same Wi-Fi):  http://$IP:$PORT/app.html"
+[ -n "$IP" ] && echo "  On your phone (same Wi-Fi):  http://$IP:$PORT/app.html?s=DEMO   (GPS needs https or localhost)"
 echo
 exec uv run python -m crowd_server --host 0.0.0.0 --port "$PORT"

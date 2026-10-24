@@ -30,7 +30,7 @@ uv run pytest
 cd viz && npm test && cd ..
 ```
 
-Expected: 135 Python tests pass and 9 viewer tests pass. If a number is different because tests were added since, the important part is that none fail.
+Expected: 182 Python tests pass and 9 viewer tests pass. If a number is different because tests were added since, the important part is that none fail.
 
 ## 2. Venue validation
 
@@ -231,39 +231,51 @@ uv run python -m crowd_sim.bench --seeds 3 7 11 --total 3000 --out docs/benchmar
 
 ## MVP: server and web apps
 
-Start it: `./run.sh` (or `docker compose up --build`). Wait for "crowD is starting", then:
+Start it: `./run.sh` (or `docker compose up --build`). On the first start the terminal prints "created operator account 'admin' with password: ..." (or set `CROWD_ADMIN_PASSWORD` first). Wait for "crowD is starting", then:
+
+**Sign in** (http://localhost:8000/login.html)
+1. Open the control room. You are sent to the sign in page. A wrong password shows an error; five wrong tries in a row block further tries for a few minutes.
+2. Sign in as `admin`. You come back to the control room, and "Sign out" appears in the top bar.
+3. Add a read-only account: `uv run python -m crowd_server.auth add watcher --role viewer`. As `watcher` you can watch an event but starting or stopping one shows an error.
 
 **Control room** (http://localhost:8000/live.html)
-1. The pill at the top says `live` and the map is moving; "Still moving" in the right panel counts down.
+1. The pill at the top says `live`, the map is moving, and the Events card lists `DEMO` with its big join code.
 2. Press `Evacuate`. The button changes to "Confirm evacuation"; press it again within 3 seconds. The mode highlights red and people head for exits.
 3. Click a gate on the map. A red cross appears and the gate is listed under "Closed gates". Press Reopen to undo.
-4. Pause, change the speed, press Restart (the clock goes back to 0). When everyone is out a note says so.
-5. In Session choose another venue or planner and press "Start new session".
+4. Pause, change the speed, press Restart (the clock goes back to 0, the code stays).
+5. Open "Start a new event", choose the `entry-rush` scenario and press Start. A second event appears in the list with its own code; click between the two. "Stop this event" removes one.
 
-**Attendee app** (http://localhost:8000/app.html, ideally on a phone)
-1. Choose where you are and press Start. A card says what to do ("Go to ...", "Wait for ... about N people ahead", "Crossing ...") and the map shows your route.
+**Attendee app** (http://localhost:8000/app.html?s=DEMO, ideally on a phone)
+1. Enter the event code, choose where you are and press Start. A card says what to do ("Go to ...", "Wait for ... about N people ahead", "Crossing ...") and the map shows your route.
 2. Press Evacuate in the control room. A red banner appears on the phone within a few seconds.
-3. Change the destination with the selector. Refresh the page: you stay joined. Press Leave, then follow a simulated person who is in a group: the card mentions the group moving together.
+3. Press "Set my position on the map" and tap a zone: you move there. Switch on "Use my phone's location" (needs the venue's anchor; on a phone this needs HTTPS or localhost) and your zone follows your real position. The status line says if the fix is too vague or outside the venue.
+4. Change the destination with the selector. Refresh the page: you stay joined. Press Leave, enter `DEMO` again and follow a simulated person who is in a group: the card mentions the group moving together.
 
 **Venue editor** (http://localhost:8000/editor.html)
 1. Choose Rectangle and drag two boxes side by side. Choose Gate and drag along the edge they share. Choose Place with `exit` and click in one box.
 2. Press Check: "The venue is valid." Press Try it: the control room opens on your venue with a crowd.
-3. Try Undo (Ctrl+Z), the Polygon tool (click corners, Enter to finish), and Open venue... to edit the example venue.
+3. Try Undo (Ctrl+Z), the Polygon tool (click corners, Enter to finish), and Open venue... to edit the example venue. Fill in latitude and longitude under "Real-world position" to let phones use GPS in your venue.
 4. Draw a gate away from any shared edge: a message explains the gate must sit between two zones.
 
 **API** (see docs/api.md)
 ```
 curl localhost:8000/api/health
-curl -X POST localhost:8000/api/control/mode -H 'content-type: application/json' -d '{"mode":"evacuation"}'
+curl localhost:8000/api/join/DEMO
+TOKEN=$(curl -s -X POST localhost:8000/api/login -H 'content-type: application/json' -d '{"username":"admin","password":"..."}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
+curl -X POST localhost:8000/api/sessions/DEMO/mode -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' -d '{"mode":"evacuation"}'
 ```
+
+**Scenarios**: every file in `scenarios/` is listed in the control room's "Start a new event". See docs/scenarios.md for what each one tests and the expected benchmark.
 
 **Automated browser check** (optional): `e2e/README.md`.
 
-**Docker**: `docker compose up --build`, open http://localhost:8000. Draw a venue, save it, run `docker compose restart`: it is still in the venue list (stored in `venues/user/`).
+**Docker**: `docker compose up --build`, open http://localhost:8000. Draw a venue, save it, run `docker compose restart`: it is still in the venue list (stored in `venues/user/`), and your login still works (stored in `data/`).
 
 | Problem | Fix |
 |---|---|
 | Pages say "Server not reachable" | Start the server with `./run.sh`. In dev mode (`./run.sh dev`) use :5173, not :8000. |
 | Phone cannot open the address | Same Wi-Fi as the computer, use the IP address `run.sh` prints, and allow incoming connections in the firewall. |
-| Attendee app says no event is running | Start a session in the control room. |
+| Phone says "no event with that code" | Check the code in the control room's Events card. Codes are not case sensitive. |
+| Location button missing or "cannot share its location" | The venue needs an anchor (editor, "Real-world position") and the page must be on HTTPS or localhost. The tap-on-map option always works. |
+| Forgot the admin password | Stop the server, delete `data/users.json`, start again: a new admin is created and printed. |
 | Port 8000 is busy | `PORT=9000 ./run.sh` |

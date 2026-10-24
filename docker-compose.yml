@@ -10,7 +10,13 @@ services:
       CROWD_TOTAL: "3000"
       CROWD_SPEED: "5"
       CROWD_AUTOSTART: "1"
+      # sign in is on; set a password here or read the generated one from `docker compose logs`
+      CROWD_ADMIN_PASSWORD: "${CROWD_ADMIN_PASSWORD:-}"
+      CROWD_DATA: /app/data
     volumes:
       # venues drawn in the editor survive restarts
       - ./venues/user:/app/venues/user
+      # accounts and the signing key
+      - ./data:/app/data
+      - ./runs:/app/runs
     restart: unless-stopped

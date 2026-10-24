@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from crowd_core.positioning import snap_to_zone
 
 VENUE = json.loads((Path(__file__).resolve().parents[2] / "venues" / "example-minimal-festival.json").read_text())

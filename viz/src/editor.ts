@@ -7,6 +7,7 @@ interface Zone { id: string; name?: string; level: string; kind: string; polygon
 interface Gate { id: string; name?: string; kind: string; from_zone: string; to_zone: string; segment: [Pt, Pt]; width_m: number; one_way?: boolean; closable?: boolean; step_free?: boolean }
 interface Dest { id: string; name?: string; kind: string; zone: string; safe?: boolean; at?: Pt }
 interface Venue {
+  anchor?: { lat: number; lon: number; rotation_deg?: number };
   schema_version: string; id: string; name?: string; units: "metres";
   levels: { id: string; name?: string; elevation_m: number }[];
   zones: Zone[]; thresholds: Gate[]; destinations: Dest[];
@@ -385,6 +386,9 @@ function refreshPanel(): void {
   let html = `<div class="card"><h3>Venue</h3>
     <label>Name<input type="text" data-v="name" value="${esc(venue.name ?? "")}"></label>
     <label>Id (lowercase letters, digits, - _)<input type="text" data-v="id" value="${esc(venue.id)}"></label>
+    <h4>Real-world position (optional)</h4>
+    <p class="muted small">Latitude and longitude of the point (0, 0), so phones can use GPS. Rotation is how far the y axis is turned clockwise from north.</p>
+    <div class="levelrow"><input type="number" step="any" data-v="alat" placeholder="latitude" value="${venue.anchor?.lat ?? ""}"><input type="number" step="any" data-v="alon" placeholder="longitude" value="${venue.anchor?.lon ?? ""}"><input type="number" step="any" data-v="arot" placeholder="rotation" title="rotation in degrees" value="${venue.anchor?.rotation_deg ?? ""}"></div>
     <h4>Levels</h4>
     ${venue.levels.map((l, i) => `<div class="levelrow"><input type="text" data-l="${i}:name" value="${esc(l.name ?? l.id)}"><input type="number" data-l="${i}:elev" value="${l.elevation_m}" title="elevation in metres"></div>`).join("")}
     <button id="addLevel" class="btn alt small" type="button">Add level</button>
@@ -428,6 +432,13 @@ $("panel").addEventListener("change", (e) => {
   const val = t.type === "checkbox" ? t.checked : t.value;
   if (ds.v === "name") venue.name = String(val);
   else if (ds.v === "id") venue.id = String(val).trim();
+  else if (ds.v === "alat" || ds.v === "alon" || ds.v === "arot") {
+    const root = $("panel");
+    const num = (k: string) => { const el = root.querySelector<HTMLInputElement>(`[data-v="${k}"]`); return el && el.value !== "" ? Number(el.value) : NaN; };
+    const lat = num("alat"), lon = num("alon"), rot = num("arot");
+    if (Number.isFinite(lat) && Number.isFinite(lon)) venue.anchor = { lat, lon, ...(Number.isFinite(rot) ? { rotation_deg: rot } : {}) };
+    else delete venue.anchor;
+  }
   else if (ds.l) {
     const [i, f] = ds.l.split(":"); const l = venue.levels[Number(i)];
     if (f === "name") l.name = String(val); else l.elevation_m = Number(val) || 0;
@@ -531,8 +542,8 @@ $("save").onclick = () => void save();
 $("try").onclick = async () => {
   if (!(await save())) return;
   try {
-    await api("/api/session", { venue: venue.id, scenario: "auto-egress", planner: "adaptive", total: 3000, speed: 10 });
-    location.href = "/live.html";
+    const s = await api<{ id: string }>("/api/sessions", { venue: venue.id, scenario: "auto-egress", planner: "adaptive", total: 3000, speed: 10, name: `Try ${venue.name ?? venue.id}`, demo_people: true });
+    location.href = `/live.html?s=${encodeURIComponent(s.id)}`;
   } catch (e) { say(`Saved, but could not start a session: ${(e as Error).message}`); }
 };
 ($("open") as HTMLSelectElement).onchange = async (e) => {

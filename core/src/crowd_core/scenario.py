@@ -29,6 +29,11 @@ def scenario_errors(s: dict[str, Any], venue: dict[str, Any]) -> list[str]:
         for i in items:
             if i[key] not in known:
                 errs.append(f"crowd.{name}: unknown {key} '{i[key]}'")
+    arr = s["crowd"].get("arrival")
+    if arr and arr["end_s"] <= arr["start_s"]:
+        errs.append("crowd.arrival: end_s must be after start_s")
+    if arr and arr["end_s"] > s["duration_s"]:
+        errs.append("crowd.arrival: window ends after the scenario does")
     for e in s["events"]:
         if "threshold" in e and e["threshold"] not in thresholds:
             errs.append(f"event at {e['at_s']}s: unknown threshold '{e['threshold']}'")

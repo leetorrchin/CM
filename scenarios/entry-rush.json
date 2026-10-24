@@ -1,0 +1,52 @@
+{
+  "schema_version": "0.1.0",
+  "id": "entry-rush",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Gates open and the crowd arrives over 20 minutes, ramping up. Everyone enters at the gate plaza and spreads to the stage, food and toilets.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 2400,
+  "mode": "normal",
+  "crowd": {
+    "total": 6000,
+    "spawn": [
+      {
+        "zone": "gate_plaza",
+        "share": 1.0
+      }
+    ],
+    "destinations": [
+      {
+        "id": "stage_a",
+        "share": 0.45
+      },
+      {
+        "id": "food",
+        "share": 0.25
+      },
+      {
+        "id": "toilets",
+        "share": 0.15
+      },
+      {
+        "id": "meet_plaza",
+        "share": 0.15
+      }
+    ],
+    "arrival": {
+      "start_s": 0,
+      "end_s": 1200,
+      "shape": "ramp"
+    }
+  },
+  "events": []
+}

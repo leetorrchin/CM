@@ -20,6 +20,7 @@ class Person:
     t_arrive: float | None = None
     edge: str | None = None
     next_zone: str | None = None
+    t_start: float = 0.0  # when this person appears in the venue (arrival profiles)
 
 
 def _apportion(total: int, shares: list[float]) -> list[int]:
@@ -39,6 +40,17 @@ def _poisson(rng: random.Random, lam: float) -> int:
         if p <= limit:
             return k
         k += 1
+
+
+def arrival_time(arr: dict, rng: random.Random) -> float:
+    """Draw one arrival time for a unit from the scenario's arrival profile."""
+    a, b = float(arr["start_s"]), float(arr["end_s"])
+    shape = arr.get("shape", "uniform")
+    if shape == "ramp":      # arrivals build up towards the end of the window
+        return a + (b - a) * math.sqrt(rng.random())
+    if shape == "peak":      # most arrive around the middle
+        return min(b, max(a, rng.triangular(a, b, (a + b) / 2)))
+    return rng.uniform(a, b)
 
 
 def spawn(scenario: dict, adoption: float, rng: random.Random) -> list[Person]:
@@ -61,6 +73,7 @@ def spawn(scenario: dict, adoption: float, rng: random.Random) -> list[Person]:
                 size = max(2, min(8, 2 + _poisson(rng, m - 2)))
                 size = min(size, left)
             dest = rng.choices(dest_ids, dest_w)[0]
+            t_start = arrival_time(crowd["arrival"], rng) if crowd.get("arrival") else 0.0
             gid = None
             if size >= 2:
                 n_group += 1
@@ -69,6 +82,6 @@ def spawn(scenario: dict, adoption: float, rng: random.Random) -> list[Person]:
                 people.append(Person(
                     id=f"p{len(people):05d}", group=gid, zone=zone_cfg["zone"], dest=dest,
                     has_app=rng.random() < adoption, u=rng.random(),
-                    speed=rng.uniform(0.8, 1.2)))
+                    speed=rng.uniform(0.8, 1.2), t_start=t_start))
             left -= size
     return people

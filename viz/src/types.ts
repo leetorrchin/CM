@@ -24,6 +24,7 @@ export interface Destination { id: string; name?: string; kind: string; zone: st
 export interface Venue {
   id: string;
   name?: string;
+  anchor?: { lat: number; lon: number; rotation_deg?: number };
   levels: { id: string; name?: string; elevation_m: number }[];
   zones: Zone[];
   thresholds: Threshold[];

@@ -21,3 +21,7 @@ venues/generated/
 scenarios/generated/
 venues/user/*
 !venues/user/.gitkeep
+
+# server data (users, secret key)
+data/
+runs/live-*

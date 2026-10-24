@@ -202,7 +202,7 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 
 ## MVP status (2026-10-24)
 
-Built: realtime server, control room, attendee web app, venue editor, Docker and one-command start (see README). Still to do for a real pilot: real positioning (GPS, Wi-Fi, BLE) and camera or turnstile connectors with sensor fusion, accounts and access control, multiple sessions, hazards and a fallback plan generator, an arrivals scenario, and calibration against real crowd data.
+Built: realtime server running several events at once, organiser accounts with roles, public join by code, real phone positioning (GPS through a venue anchor, or tap on the map), control room, attendee web app, venue editor, nine scenarios including arrivals, Docker and one-command start, CI config (see README and docs/decisions.md 025 to 028). Still to do for a real pilot: indoor positioning (Wi-Fi, BLE, floors), camera and turnstile connectors with sensor fusion, SSO and audit logging, hazards and a fallback plan generator, and calibration against real crowd data.
 
 ## Immediate next steps
 

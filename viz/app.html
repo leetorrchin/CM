@@ -18,14 +18,20 @@
   <section id="join" hidden>
     <h1>crowD</h1>
     <p class="muted">Find your way around the event and get moving guidance when it is busy.</p>
-    <div class="card">
-      <h3>Join</h3>
+    <div class="card" id="step1">
+      <h3>Join an event</h3>
+      <label>Event code<input id="codeIn" autocomplete="off" autocapitalize="characters" maxlength="12" placeholder="e.g. DEMO" style="font-size:20px;letter-spacing:.15em;text-transform:uppercase"></label>
+      <button id="find" class="btn big" type="button">Continue</button>
+    </div>
+    <div class="card" id="step2" hidden>
+      <h3 id="evTitle"></h3>
       <label>Where are you now?<select id="where"></select></label>
       <label>Where do you want to go?<select id="to"></select></label>
       <button id="joinBtn" class="btn big" type="button">Start</button>
-      <p class="muted small">Demo build: your position is chosen here, not taken from GPS.</p>
+      <button id="back" class="btn alt" type="button">Use a different code</button>
+      <p class="muted small">You can switch on your phone's location once you are in.</p>
     </div>
-    <div class="card">
+    <div class="card" id="demoBox" hidden>
       <h3>Or follow a simulated person</h3>
       <p class="muted small">See what the app shows someone in the crowd.</p>
       <ul id="people" class="list"></ul>
@@ -34,12 +40,18 @@
     <p class="small"><a href="/">All crowD pages</a></p>
   </section>
   <section id="main" hidden>
+    <div class="muted small" id="eventName"></div>
     <div id="instr" class="card instr"><div id="iTitle" class="big-title"></div><div id="iDetail"></div></div>
     <div class="view" id="map"><canvas id="cv"></canvas></div>
     <div class="card">
       <dl id="facts"></dl>
       <label id="destRow" class="destrow">Change destination<select id="dest"></select></label>
       <ul id="closedList" class="small"></ul>
+      <div id="locCard">
+        <label id="useLocRow" class="check"><span><input id="useLoc" type="checkbox"> Use my phone's location</span></label>
+        <button id="tapBtn" class="btn alt" type="button">Set my position on the map</button>
+        <p id="locStatus" class="muted small"></p>
+      </div>
       <button id="leave" class="btn alt" type="button">Leave</button>
     </div>
   </section>

@@ -11,12 +11,24 @@
   <header>
     <h1>crowD <span>control room</span></h1>
     <span id="conn" class="pill bad">connecting</span>
-    <nav class="top"><a href="/">Home</a><a href="/live.html" aria-current="page">Control room</a><a href="/app.html">Attendee app</a><a href="/editor.html">Venue editor</a><a href="/viewer.html">Run viewer</a></nav>
+    <nav class="top"><a href="/">Home</a><a href="/live.html" aria-current="page">Control room</a><a href="/app.html">Attendee app</a><a href="/editor.html">Venue editor</a><a href="/viewer.html">Run viewer</a><a href="#" id="logout" hidden>Sign out</a></nav>
   </header>
   <div id="msg" role="status" hidden></div>
   <main>
     <section id="views"><div class="view" id="map"><canvas id="cv"></canvas></div></section>
     <aside id="panel" aria-label="Controls">
+      <div class="card">
+        <h3>Events</h3>
+        <ul id="sessions" class="list"></ul>
+        <p id="noSession" class="muted small" hidden>No event running. Start one below.</p>
+        <div id="joinBox" class="joinbox" hidden>
+          <div class="muted small">Join code</div>
+          <div id="code" class="code"></div>
+          <div class="small">Phones open <code id="appUrl"></code></div>
+          <div class="small muted" id="guestInfo"></div>
+        </div>
+        <div class="row"><button id="del" class="btn alt" type="button" hidden>Stop this event</button></div>
+      </div>
       <div class="card">
         <h3>Mode</h3>
         <div class="seg" id="modes">
@@ -43,17 +55,19 @@
         <p class="muted small">Click a gate on the map to close or reopen it.</p>
         <ul id="closed" style="margin:0;padding-left:18px"></ul>
       </div>
-      <div class="card">
-        <h3>Session</h3>
+      <details class="card" id="newCard">
+        <summary><b>Start a new event</b></summary>
+        <div class="row"><label style="flex:1">Name<input id="evName" maxlength="60" placeholder="optional" style="width:100%"></label></div>
         <div class="row"><label style="flex:1">Venue<select id="venueSel" style="width:100%"></select></label></div>
         <div class="row"><label style="flex:1">Scenario<select id="scSel" style="width:100%"></select></label></div>
         <div class="row">
           <label style="flex:1">Planner<select id="plSel" style="width:100%"></select></label>
           <label style="flex:1">People<input id="total" type="number" min="10" max="60000" step="100" value="3000"></label>
         </div>
-        <div class="row"><button id="start" class="btn" type="button">Start new session</button></div>
-        <p class="small muted">Phones join at <code id="appUrl"></code></p>
-      </div>
+        <div class="row"><label><input id="demoPeople" type="checkbox"> Let phones follow simulated people (demo)</label></div>
+        <div class="row"><label><input id="rec" type="checkbox"> Record this event to a file</label></div>
+        <div class="row"><button id="start" class="btn" type="button">Start event</button></div>
+      </details>
       <div class="card key">
         <h3>Reading the map</h3>
         <p><b>Colour</b> and the number are how full a zone is, up to its limit, counting people walking through. <b>Orange bubbles</b> are people waiting to cross a gate. <b>Blue dashes</b> are people crossing. A <b>red cross</b> is a closed gate.</p>

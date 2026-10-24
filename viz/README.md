@@ -1,5 +1,7 @@
 # viz/
 
+All the web apps: home (`index.html`), control room (`live.html`), attendee app (`app.html`), venue editor (`editor.html`) and run viewer (`viewer.html`). The first four need the server (`../run.sh`). `npm run dev` proxies `/api` and `/ws` to a server on :8000. The rest of this file is about the run viewer.
+
 Run viewer (TypeScript, Vite, Canvas 2D). Plays back an event log (`runs/*.jsonl`) on a venue (`venues/*.json`): zone density heatmap, queues at thresholds, people crossing thresholds, closures, a timeline with event ticks, and a chart of people still moving and waiting. Add two runs of the same venue to compare them side by side with shared time and a final-results table that highlights the better value.
 
 ```

@@ -1,3 +1,3 @@
 # app/
 
-Entity app (React Native with Expo): position reporting, guidance, groups. Not started (Phase 5). Until then, `sim/` stands in for it through the same position and guidance messages.
+The attendee app is a web app (PWA) and lives in `viz/` (`app.html`, `src/app.ts`) so it shares the renderer with the control room. See decision 023. A native app is not planned for now.

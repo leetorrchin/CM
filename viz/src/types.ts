@@ -18,13 +18,16 @@ export interface Threshold {
   segment: [Pt, Pt];
   width_m: number;
   one_way?: boolean;
+  closable?: boolean;
 }
+export interface Destination { id: string; name?: string; kind: string; zone: string; safe?: boolean }
 export interface Venue {
   id: string;
   name?: string;
   levels: { id: string; name?: string; elevation_m: number }[];
   zones: Zone[];
   thresholds: Threshold[];
+  destinations?: Destination[];
 }
 
 export type NumMap = Record<string, number>;

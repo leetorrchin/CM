@@ -200,6 +200,10 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 | Simulation does not match real crowd behaviour | Results look good in sim and fail in reality | Start from established density and speed relationships, vary behaviour parameters widely, test robustness not just averages, calibrate with real data from drills when possible |
 | Venue drawing is tedious | Nobody uses the editor | Trace over site plan images, sensible defaults for capacity |
 
+## MVP status (2026-10-24)
+
+Built: realtime server, control room, attendee web app, venue editor, Docker and one-command start (see README). Still to do for a real pilot: real positioning (GPS, Wi-Fi, BLE) and camera or turnstile connectors with sensor fusion, accounts and access control, multiple sessions, hazards and a fallback plan generator, an arrivals scenario, and calibration against real crowd data.
+
 ## Immediate next steps
 
 1. Done: example festival venue and the three scenarios (`scenarios/`).

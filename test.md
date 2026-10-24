@@ -1,6 +1,6 @@
 # Manual testing guide
 
-How to check the features built so far: venue validation, the baseline planner, the crowd simulator, the venue generator, the emulated sensors and the run viewer. The optimiser exists (see the planner section); there is no phone app or server yet.
+How to check everything built so far: venue validation, the planners, the crowd simulator, the venue generator, the emulated sensors, the run viewer, and the MVP (server, control room, attendee app, venue editor). The MVP checklist is the last section.
 
 Run all commands from the repo root unless a step says otherwise.
 
@@ -30,7 +30,7 @@ uv run pytest
 cd viz && npm test && cd ..
 ```
 
-Expected: 110 Python tests pass and 9 viewer tests pass. If a number is different because tests were added since, the important part is that none fail.
+Expected: 135 Python tests pass and 9 viewer tests pass. If a number is different because tests were added since, the important part is that none fail.
 
 ## 2. Venue validation
 
@@ -200,7 +200,7 @@ Expected: `identical`. With `--seed 4` they should differ.
 
 ## 8. Not built yet
 
-Nothing to test for these: the phone app, the realtime server, the venue editor, sensor fusion, Wi-Fi and BLE sensors, and a live mode in the viewer. 
+Nothing to test for these: sensor fusion, Wi-Fi and BLE sensors, real positioning, accounts. 
 
 ## Troubleshooting
 
@@ -228,3 +228,42 @@ Benchmark across generated venues (takes about 2 minutes):
 ```
 uv run python -m crowd_sim.bench --seeds 3 7 11 --total 3000 --out docs/benchmarks.md
 ```
+
+## MVP: server and web apps
+
+Start it: `./run.sh` (or `docker compose up --build`). Wait for "crowD is starting", then:
+
+**Control room** (http://localhost:8000/live.html)
+1. The pill at the top says `live` and the map is moving; "Still moving" in the right panel counts down.
+2. Press `Evacuate`. The button changes to "Confirm evacuation"; press it again within 3 seconds. The mode highlights red and people head for exits.
+3. Click a gate on the map. A red cross appears and the gate is listed under "Closed gates". Press Reopen to undo.
+4. Pause, change the speed, press Restart (the clock goes back to 0). When everyone is out a note says so.
+5. In Session choose another venue or planner and press "Start new session".
+
+**Attendee app** (http://localhost:8000/app.html, ideally on a phone)
+1. Choose where you are and press Start. A card says what to do ("Go to ...", "Wait for ... about N people ahead", "Crossing ...") and the map shows your route.
+2. Press Evacuate in the control room. A red banner appears on the phone within a few seconds.
+3. Change the destination with the selector. Refresh the page: you stay joined. Press Leave, then follow a simulated person who is in a group: the card mentions the group moving together.
+
+**Venue editor** (http://localhost:8000/editor.html)
+1. Choose Rectangle and drag two boxes side by side. Choose Gate and drag along the edge they share. Choose Place with `exit` and click in one box.
+2. Press Check: "The venue is valid." Press Try it: the control room opens on your venue with a crowd.
+3. Try Undo (Ctrl+Z), the Polygon tool (click corners, Enter to finish), and Open venue... to edit the example venue.
+4. Draw a gate away from any shared edge: a message explains the gate must sit between two zones.
+
+**API** (see docs/api.md)
+```
+curl localhost:8000/api/health
+curl -X POST localhost:8000/api/control/mode -H 'content-type: application/json' -d '{"mode":"evacuation"}'
+```
+
+**Automated browser check** (optional): `e2e/README.md`.
+
+**Docker**: `docker compose up --build`, open http://localhost:8000. Draw a venue, save it, run `docker compose restart`: it is still in the venue list (stored in `venues/user/`).
+
+| Problem | Fix |
+|---|---|
+| Pages say "Server not reachable" | Start the server with `./run.sh`. In dev mode (`./run.sh dev`) use :5173, not :8000. |
+| Phone cannot open the address | Same Wi-Fi as the computer, use the IP address `run.sh` prints, and allow incoming connections in the firewall. |
+| Attendee app says no event is running | Start a session in the control room. |
+| Port 8000 is busy | `PORT=9000 ./run.sh` |

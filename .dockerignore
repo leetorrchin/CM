@@ -1,0 +1,11 @@
+.git
+.venv
+**/node_modules
+**/dist
+**/__pycache__
+.stage
+runs/*
+venues/generated
+scenarios/generated
+docs
+*.md

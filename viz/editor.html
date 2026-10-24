@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>crowD venue editor</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/nav.css">
+  <link rel="stylesheet" href="/src/editor.css">
+</head>
+<body>
+  <header>
+    <h1>crowD <span>venue editor</span></h1>
+    <nav class="top"><a href="/">Home</a><a href="/live.html">Control room</a><a href="/app.html">Attendee app</a><a href="/editor.html" aria-current="page">Venue editor</a><a href="/viewer.html">Run viewer</a></nav>
+  </header>
+  <div id="bar">
+    <div class="seg" id="tools" role="toolbar" aria-label="Tools">
+      <button data-tool="select" class="on" title="Select and move (V)">Select</button>
+      <button data-tool="rect" title="Drag a rectangle (R)">Rectangle</button>
+      <button data-tool="poly" title="Click corners, Enter to finish (P)">Polygon</button>
+      <button data-tool="gate" title="Drag along the shared edge of two zones (G)">Gate</button>
+      <button data-tool="dest" title="Click inside a zone (D)">Place</button>
+      <button data-tool="del" title="Click to delete (X)">Delete</button>
+    </div>
+    <select id="destKind" title="Kind of place to add" aria-label="Kind of place"></select>
+    <label class="check"><input id="snap" type="checkbox" checked> Snap</label>
+    <select id="level" aria-label="Level"></select>
+    <button id="undo" class="btn alt" type="button">Undo</button>
+    <button id="redo" class="btn alt" type="button">Redo</button>
+    <span class="spacer"></span>
+    <select id="open" aria-label="Open from server"><option value="">Open venue…</option></select>
+    <label class="btn alt">Import<input id="import" type="file" accept=".json" hidden></label>
+    <button id="export" class="btn alt" type="button">Export</button>
+    <button id="validate" class="btn alt" type="button">Check</button>
+    <button id="save" class="btn" type="button">Save</button>
+    <button id="try" class="btn" type="button">Try it</button>
+  </div>
+  <div id="msg" role="status" hidden></div>
+  <main>
+    <section class="view" id="map"><canvas id="cv" tabindex="0"></canvas><div id="coord"></div></section>
+    <aside id="panel"></aside>
+  </main>
+  <script type="module" src="/src/editor.ts"></script>
+</body>
+</html>

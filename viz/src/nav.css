@@ -1,0 +1,19 @@
+nav.top { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+nav.top a { color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: 6px; }
+nav.top a:hover { color: var(--text); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+nav.top a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.btn.alt { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+.btn.bad { background: var(--bad); }
+.btn[disabled] { opacity: .5; cursor: default; }
+input[type=text], input[type=number] { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; width: 100%; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+.row > * { flex: 1; } .row > .btn { flex: 0 0 auto; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.seg button { flex: 1; border: 0; background: var(--surface); color: var(--text); padding: 7px 8px; cursor: pointer; font: inherit; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent); color: #fff; }
+.seg button.on.evac { background: var(--bad); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); color: var(--accent); font-size: 12px; }
+.pill.bad { background: color-mix(in srgb, var(--bad) 18%, var(--surface)); color: var(--bad); }
+.muted { color: var(--muted); } .small { font-size: 12px; }
+[hidden] { display: none !important; }

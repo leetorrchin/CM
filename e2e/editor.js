@@ -1,0 +1,46 @@
+const { chromium } = require('playwright');
+const BASE = process.env.BASE || 'http://localhost:8000';
+const SHOTS = process.env.SHOTS || require('os').tmpdir();
+(async () => {
+  const b = await chromium.launch();
+  const errs = [];
+  const pg = await (await b.newContext({ viewport: { width: 1300, height: 800 } })).newPage();
+  pg.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+  pg.on('pageerror', e => errs.push('pageerror: ' + e.message));
+  pg.on('dialog', d => d.accept());
+  await pg.goto(BASE + '/editor.html');
+  await pg.waitForSelector('#cv');
+  const box = await (await pg.$('#cv')).boundingBox();
+  const scale = Math.min(box.width / 140, box.height / 90);
+  const P = (x, y) => [box.x + x * scale + 20, box.y + box.height - (y * scale + 20)];
+  const drag = async (tool, a, c) => {
+    await pg.click(`#tools button[data-tool=${tool}]`);
+    const [ax, ay] = P(...a), [cx, cy] = P(...c);
+    await pg.mouse.move(ax, ay); await pg.mouse.down(); await pg.mouse.move((ax + cx) / 2, (ay + cy) / 2); await pg.mouse.move(cx, cy); await pg.mouse.up();
+  };
+  await drag('rect', [10, 10], [50, 40]);
+  await drag('rect', [50, 10], [90, 40]);
+  await drag('gate', [50, 20], [50, 30]);
+  await pg.selectOption('#destKind', 'exit');
+  await pg.click('#tools button[data-tool=dest]');
+  await pg.mouse.click(...P(80, 25));
+  console.log('summary:', (await pg.textContent('#panel')).match(/\d+ zones, \d+ gates, \d+ places/)?.[0]);
+  await pg.click('#tools button[data-tool=select]');
+  await pg.mouse.click(...P(20, 35));
+  console.log('selected zone panel has kind select:', await pg.isVisible('select[data-z=kind]'));
+  await pg.fill('input[data-z=name]', 'West hall'); await pg.dispatchEvent('input[data-z=name]', 'change');
+  await pg.screenshot({ path: SHOTS + '/editor1.png' });
+  await pg.click('#validate');
+  await pg.waitForTimeout(800);
+  console.log('check:', (await pg.textContent('#msg')).trim());
+  // make an invalid change: delete the gate then check
+  await pg.fill('input[data-v=id]', 'e2e-venue'); await pg.dispatchEvent('input[data-v=id]', 'change');
+  await pg.click('#try');
+  await pg.waitForURL('**/live.html', { timeout: 8000 });
+  await pg.waitForSelector('#stats dt');
+  await pg.waitForTimeout(2500);
+  console.log('live venue select:', await pg.$eval('#venueSel', e => e.value), '| people:', (await pg.textContent('#stats')).slice(0, 40));
+  await pg.screenshot({ path: SHOTS + '/live_user.png' });
+  console.log('errors:', errs);
+  await b.close();
+})();

@@ -113,6 +113,7 @@ class Simulation:
 
         self.people = spawn(scenario, self.adoption, self.rng)
         self.units = build_units(self.people, group_mode)
+        self.unit_of: dict[str, Unit] = {m.id: un for un in self.units for m in un.members}
         self.groups: dict[str, list[Person]] = {}
         for p in self.people:
             if p.group:
@@ -375,6 +376,17 @@ class Simulation:
             self._decide(un, t)
 
     # ------------------------------------------------------------------ logging
+    def state_dict(self, t: float, queues: dict | None = None, split: int = 0) -> dict[str, Any]:
+        """What a zone_state record holds: counts per zone, crossing and queue, for dashboards."""
+        queues = queues if queues is not None else {k: n for k, n in self.qcount.items() if n}
+        return {
+            "t_s": round(t, 3), "mode": self.mode,
+            "zones": {z: n for z, n in self.occ.items() if n},
+            "transit": {k: n for k, n in self.transit_n.items() if n},
+            "queues": queues, "cleared": self.cleared,
+            "active": sum(u.size for u in self.units if u.state in ACTIVE),
+            "groups_split": split, "closed": sorted(self.closed)}
+
     def _sample(self, t: float) -> None:
         for z, n in self.occ.items():
             if n:
@@ -395,52 +407,129 @@ class Simulation:
         self.split_samples += split
         self.group_samples += total
         self.split_peak = max(self.split_peak, split)
-        self.log.emit("zone_state", {
-            "t_s": round(t, 3), "mode": self.mode,
-            "zones": {z: n for z, n in self.occ.items() if n},
-            "transit": {k: n for k, n in self.transit_n.items() if n},
-            "queues": queues, "cleared": self.cleared,
-            "active": sum(u.size for u in self.units if u.state in ACTIVE),
-            "groups_split": split, "closed": sorted(self.closed)})
+        self.log.emit("zone_state", self.state_dict(t, queues, split))
         for s in self.sensors:
             for typ, data in s.observe(self, t):
                 self.log.emit(typ, data)
 
     # ------------------------------------------------------------------ run
-    def run(self) -> dict[str, Any]:
-        sc, dt = self.sc, self.dt
+    def begin(self) -> None:
+        sc = self.sc
         self.log.emit("run_start", {
             "venue": self.vg.venue["id"], "scenario": sc["id"], "planner": self.planner.name,
-            "seed": self.seed, "dt_s": dt, "replan_s": self.replan_s, "app_adoption": self.adoption,
+            "seed": self.seed, "dt_s": self.dt, "replan_s": self.replan_s, "app_adoption": self.adoption,
             "people": len(self.people), "group_mode": self.group_mode,
             "queue_switching": self.queue_switching})
-        events = sorted(sc["events"], key=lambda e: e["at_s"])
-        ei, next_replan, next_log = 0, 0.0, 0.0
-        n_steps = int(math.ceil(sc["duration_s"] / dt))
-        t = 0.0
-        for step in range(n_steps + 1):
-            t = step * dt
-            self.clock.set(t)
-            while ei < len(events) and events[ei]["at_s"] <= t:
-                self._apply_event(events[ei], t)
-                ei += 1
-            if t >= next_replan:
-                self._replan(t)
-                self._process_pending(t)
-                next_replan = t + self.replan_s
-            self._land(t)
-            self._admit(t)
-            if t >= next_log:
-                self._sample(t)
-                next_log = t + self.log_every_s
-            if ei >= len(events) and not any(u.state in ACTIVE for u in self.units):
-                break
-        self._sample(t)
-        metrics = self.metrics(t)
+        self._events = sorted(sc["events"], key=lambda e: e["at_s"])
+        self._ei, self._next_replan, self._next_log, self._step, self._t = 0, 0.0, 0.0, 0, 0.0
+        self._injected: deque[dict] = deque()
+
+    def inject(self, event: dict) -> None:
+        """Queue an event (mode_change, closure, reopen) to be applied at the next step."""
+        if event.get("type") not in ("mode_change", "closure", "reopen"):
+            raise ValueError(f"unknown event type {event.get('type')!r}")
+        self._injected.append(dict(event))
+
+    def add_guest(self, zone: str, dest: str = NEAREST_SAFE) -> str:
+        """Add one real user to the crowd. They always follow guidance."""
+        if zone not in self.vg.zones:
+            raise KeyError(zone)
+        n = sum(1 for p in self.people if p.id.startswith("guest-")) + 1
+        p = Person(f"guest-{n}", None, zone, dest, True, 0.0, 1.0, t_goal=self._t)
+        un = build_units([p], self.group_mode)[0]
+        self.people.append(p)
+        self.units.append(un)
+        self.unit_of[p.id] = un
+        self.occ[zone] += 1
+        self.pending[id(un)] = un
+        return p.id
+
+    def set_destination(self, person_id: str, dest: str) -> bool:
+        """A user changes where they want to go. Allowed until they have left the venue."""
+        un = self.unit_of.get(person_id)
+        if un is None or un.state == "gone" or (dest != NEAREST_SAFE and dest not in self.vg.destinations):
+            return False
+        if un.state == "queued":
+            self._unqueue(un)
+            self.pending[id(un)] = un
+        un.dest, un.t_goal, un.t_arrive = dest, self._t, None
+        if un.state == "done":
+            un.state = "wait"
+            self.pending[id(un)] = un
+        return True
+
+    def _idle(self) -> bool:
+        return self._ei >= len(self._events) and not any(u.state in ACTIVE for u in self.units)
+
+    def _tick(self) -> None:
+        dt, t = self.dt, self._step * self.dt
+        self._t = t
+        self.clock.set(t)
+        while self._injected:
+            self._apply_event(self._injected.popleft(), t)
+        while self._ei < len(self._events) and self._events[self._ei]["at_s"] <= t:
+            self._apply_event(self._events[self._ei], t)
+            self._ei += 1
+        if t >= self._next_replan:
+            self._replan(t)
+            self._process_pending(t)
+            self._next_replan = t + self.replan_s
+        self._land(t)
+        self._admit(t)
+        if t >= self._next_log:
+            self._sample(t)
+            self._next_log = t + self.log_every_s
+        self._step += 1
+
+    def advance(self, until_s: float, stop_when_idle: bool = False) -> bool:
+        """Step the simulation up to sim time `until_s`. Returns True if it went idle."""
+        while self._step * self.dt <= until_s:
+            self._tick()
+            if stop_when_idle and self._idle():
+                return True
+        return False
+
+    def finish(self) -> dict[str, Any]:
+        self._sample(self._t)
+        metrics = self.metrics(self._t)
         self.log.emit("metric", {"scope": "final", **metrics})
-        self.log.emit("run_end", {"t_s": round(t, 3)})
+        self.log.emit("run_end", {"t_s": round(self._t, 3)})
         self.log.close()
         return metrics
+
+    def run(self) -> dict[str, Any]:
+        self.begin()
+        self.advance(math.ceil(self.sc["duration_s"] / self.dt) * self.dt, stop_when_idle=True)
+        return self.finish()
+
+    # ------------------------------------------------------------------ live queries
+    def guidance(self, person_id: str) -> dict[str, Any] | None:
+        """What a phone would show for this person right now."""
+        un = self.unit_of.get(person_id)
+        if un is None:
+            return None
+        zone = un.zone
+        out: dict[str, Any] = {"person_id": person_id, "state": un.state, "zone": zone, "mode": self.mode,
+                               "destination": un.dest, "group_size": un.size,
+                               "following": self._follows(un), "t_s": round(self._t, 1)}
+        if un.state == "transit" and un.edge:
+            tid, rest = un.edge.split(":", 1)
+            out.update(crossing=tid, from_zone=rest.split("->")[0], zone=rest.split("->")[0], to_zone=un.next_zone)
+        elif un.state == "queued" and un.edge:
+            tid = un.edge.split(":", 1)[0]
+            out.update(next_threshold=tid, next_zone=un.next_zone, queue_ahead=int(self.qcount.get(un.edge, 0)),
+                       waited_s=round(self._t - un.queued_at, 1))
+        elif un.state in ("undecided", "wait", "stuck"):
+            c = self.plan_cache.get(un.guide_id) if un.guide_id else None
+            if c and c[0] == zone and c[1]:
+                th = self.vg.thresholds[c[1]]
+                out.update(next_threshold=c[1], next_zone=th["to_zone"] if th["from_zone"] == zone else th["from_zone"])
+        if un.state == "gone":
+            out["arrived"] = True
+        if un.state == "done":
+            out["arrived"] = True
+        out["closed"] = sorted(self.closed)
+        return out
 
     def metrics(self, t_end: float) -> dict[str, Any]:
         arrived = [u for u in self.units if u.t_arrive is not None]

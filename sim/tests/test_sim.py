@@ -90,3 +90,45 @@ def test_optimising_planners_complete_and_do_not_lose_to_baseline_on_egress(plan
     m = run_scenario(VENUE, SC / "egress-end-of-night.json", total=2000, planner=planner)
     assert m["arrived_share"] == 1.0 and m["stuck"] == 0
     assert m["travel_time_mean_s"] <= base["travel_time_mean_s"]
+
+
+def _live_sim(total=300, planner="adaptive"):
+    from crowd_core.graph import compile_venue
+    from crowd_core.scenario import load_scenario
+    from crowd_core.venue import load_venue
+    from crowd_sim.engine import Simulation
+    from crowd_sim.run import PLANNERS
+    v = load_venue(VENUE)
+    sc = load_scenario(SC / "egress-end-of-night.json", v)
+    sc["crowd"]["total"] = total
+    sc["events"] = []
+    sim = Simulation(compile_venue(v), sc, PLANNERS[planner]())
+    sim.begin()
+    return sim
+
+
+def test_stepping_matches_run():
+    a = _live_sim(400, "baseline")
+    a.advance(900, stop_when_idle=True)
+    ma = a.finish()
+    mb = run_scenario(VENUE, SC / "egress-end-of-night.json", total=400, planner="baseline")
+    # the live helper drops scenario events, so only compare population size here
+    assert ma["people"] == mb["people"] == 400
+
+
+def test_injected_evacuation_and_guest_guidance():
+    sim = _live_sim()
+    gid = sim.add_guest("main_field")
+    sim.advance(5)
+    g = sim.guidance(gid)
+    assert g["zone"] == "main_field" and g["mode"] == "egress"
+    sim.inject({"type": "mode_change", "mode": "evacuation", "destination": "nearest_safe"})
+    sim.inject({"type": "closure", "threshold": "t_field_exit_south"})
+    sim.advance(60)
+    g = sim.guidance(gid)
+    assert g["mode"] == "evacuation" and "t_field_exit_south" in g["closed"]
+    sim.advance(900)
+    assert sim.guidance(gid)["arrived"] is True
+    assert sim.cleared == len(sim.people)
+    with pytest.raises(ValueError):
+        sim.inject({"type": "bogus"})

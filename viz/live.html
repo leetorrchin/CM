@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>crowD control room</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/nav.css">
+</head>
+<body>
+  <header>
+    <h1>crowD <span>control room</span></h1>
+    <span id="conn" class="pill bad">connecting</span>
+    <nav class="top"><a href="/">Home</a><a href="/live.html" aria-current="page">Control room</a><a href="/app.html">Attendee app</a><a href="/editor.html">Venue editor</a><a href="/viewer.html">Run viewer</a></nav>
+  </header>
+  <div id="msg" role="status" hidden></div>
+  <main>
+    <section id="views"><div class="view" id="map"><canvas id="cv"></canvas></div></section>
+    <aside id="panel" aria-label="Controls">
+      <div class="card">
+        <h3>Mode</h3>
+        <div class="seg" id="modes">
+          <button data-mode="normal">Normal</button><button data-mode="egress">Egress</button><button data-mode="evacuation" class="evac">Evacuate</button>
+        </div>
+        <p class="muted small" id="modeHint">Evacuation sends everyone to the nearest safe destination.</p>
+        <div class="row">
+          <button id="pause" class="btn alt" type="button">Pause</button>
+          <button id="restart" class="btn alt" type="button">Restart</button>
+          <select id="speed" aria-label="Simulation speed">
+            <option value="1">1x</option><option value="5">5x</option><option value="10">10x</option>
+            <option value="30">30x</option><option value="60">60x</option><option value="120">120x</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Right now <span id="clock" class="muted"></span></h3>
+        <dl id="stats"></dl>
+        <p id="done" class="pill" hidden>Everyone is out. Press Restart to run it again.</p>
+        <h4>Longest queues</h4><ol id="queues"></ol>
+      </div>
+      <div class="card">
+        <h3>Closed gates</h3>
+        <p class="muted small">Click a gate on the map to close or reopen it.</p>
+        <ul id="closed" style="margin:0;padding-left:18px"></ul>
+      </div>
+      <div class="card">
+        <h3>Session</h3>
+        <div class="row"><label style="flex:1">Venue<select id="venueSel" style="width:100%"></select></label></div>
+        <div class="row"><label style="flex:1">Scenario<select id="scSel" style="width:100%"></select></label></div>
+        <div class="row">
+          <label style="flex:1">Planner<select id="plSel" style="width:100%"></select></label>
+          <label style="flex:1">People<input id="total" type="number" min="10" max="60000" step="100" value="3000"></label>
+        </div>
+        <div class="row"><button id="start" class="btn" type="button">Start new session</button></div>
+        <p class="small muted">Phones join at <code id="appUrl"></code></p>
+      </div>
+      <div class="card key">
+        <h3>Reading the map</h3>
+        <p><b>Colour</b> and the number are how full a zone is, up to its limit, counting people walking through. <b>Orange bubbles</b> are people waiting to cross a gate. <b>Blue dashes</b> are people crossing. A <b>red cross</b> is a closed gate.</p>
+      </div>
+    </aside>
+  </main>
+  <div id="tip" hidden></div>
+  <script type="module" src="/src/live.ts"></script>
+</body>
+</html>

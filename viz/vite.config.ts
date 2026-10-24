@@ -47,4 +47,18 @@ function crowdData(): Plugin {
   };
 }
 
-export default defineConfig({ plugins: [crowdData()], server: { port: 5173 } });
+const pages = ["index", "viewer", "live", "app", "editor"];
+
+export default defineConfig({
+  plugins: [crowdData()],
+  server: {
+    port: 5173,
+    // run `python -m crowd_server` next to `npm run dev` and the pages talk to it
+    proxy: { "/api": "http://localhost:8000", "/ws": { target: "ws://localhost:8000", ws: true } },
+  },
+  build: {
+    rollupOptions: {
+      input: Object.fromEntries(pages.map((p) => [p, path.resolve(path.dirname(fileURLToPath(import.meta.url)), `${p}.html`)])),
+    },
+  },
+});

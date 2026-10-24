@@ -4,7 +4,7 @@ An algorithmic manager that determines the optimal flow of entities given their 
 
 crowD takes a drawn-out event space and a live picture of how full it is, then works out where people should go next so the crowd as a whole moves efficiently and safely. Think of it as traffic management for people. The first target is a large concert or festival, for both everyday flow (arrivals, stage changes, exits) and evacuation.
 
-> Status: early planning. See [PLAN.md](PLAN.md) for the build plan and milestones.
+> Status: Phase 0 (spec). Repo structure, JSON Schemas, an example multi-level venue, three scenarios, a venue graph compiler, a baseline shortest-path router a zone-level crowd simulator that writes replayable event logs, a procedural venue generator, emulated sensors and a run viewer are in place. See [PLAN.md](PLAN.md) for the build plan and milestones.
 
 ## What it does
 
@@ -75,8 +75,10 @@ It is very early, and testing with real crowds is not realistic. So the system i
 
 | Component | Responsibility | Proposed stack |
 |---|---|---|
-| `template/` | Venue template schema, validation, example venues | JSON Schema |
-| `core/` | Venue graph, planner interface, baseline and optimiser, groups | Python, NetworkX, OR-Tools |
+| `schemas/` | JSON Schemas for venues and every message between components | JSON Schema (draft 2020-12) |
+| `venues/` | Example and fixture venue files | JSON |
+| `scenarios/` | Scenario files for the simulator | JSON |
+| `core/` | Venue graph, planner interface, baseline and optimiser, groups, validation | Python, NetworkX, OR-Tools |
 | `sim/` | Emulated people, venue generator, emulated sensors, simulated clock, scenarios | Python |
 | `viz/` | Visualiser for live and replayed runs, shared with the operator console | TypeScript, canvas or PixiJS |
 | `connectors/` | Real occupancy source adapters and fusion | Python |
@@ -85,7 +87,7 @@ It is very early, and testing with real crowds is not realistic. So the system i
 | `app/` | Real entity tracking, groups and guidance | React Native (Expo) |
 | `docs/` | Design notes, decisions | Markdown |
 
-These are starting choices, not commitments. Hard rules: `core/` depends on nothing else in the repo, `sim/` depends only on `core/` and `template/`, and no component reaches into another except through the schemas.
+These are starting choices, not commitments. Hard rules: `core/` depends on nothing else in the repo, `sim/` and `connectors/` depend only on `core/` and `schemas/`, and no component reaches into another except through the schemas.
 
 ## Occupancy connectors
 
@@ -124,7 +126,9 @@ Planned adapters: generic webhook and MQTT ingest, vendor camera counting APIs, 
 crowD/
   README.md
   PLAN.md
-  template/     schema and example venues
+  schemas/      JSON Schemas, the contract between components
+  venues/       example and fixture venue files
+  scenarios/    scenario files for the simulator
   core/         graph, planner interface, optimiser, groups
   sim/          emulated people, venues, sensors, scenarios
   viz/          visualiser (live and replay)
@@ -161,7 +165,18 @@ See [PLAN.md](PLAN.md) for details. In short:
 
 ## Getting started
 
-Nothing to run yet. Setup instructions will be added as `core/` and `template/` land.
+Needs [uv](https://docs.astral.sh/uv/).
+
+```
+uv sync --all-packages
+uv run pytest
+uv run python -m crowd_core.venue venues/example-minimal-festival.json
+uv run python -m crowd_sim.run --venue venues/example-minimal-festival.json --scenario scenarios/egress-end-of-night.json
+uv run python -m crowd_sim.venuegen --seed 7 --stages 4   # generate a venue and its scenarios
+cd viz && npm install && npm run dev                      # watch runs in the browser
+```
+
+Layout and dependency rules are in [docs/architecture.md](docs/architecture.md). Design decisions are logged in [docs/decisions.md](docs/decisions.md).
 
 ## Contributing
 

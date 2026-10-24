@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/position_update.schema.json",
+  "title": "Position update",
+  "type": "object",
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "entity_id": { "$ref": "common.schema.json#/$defs/id" },
+    "timestamp": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "position": { "$ref": "common.schema.json#/$defs/point" },
+    "level": { "$ref": "common.schema.json#/$defs/id" },
+    "accuracy_m": { "type": "number", "minimum": 0 },
+    "source": { "enum": ["app_gps", "app_ble", "app_wifi", "app_fused", "emulated"] }
+  },
+  "required": ["schema_version", "entity_id", "timestamp", "position", "level", "source"],
+  "additionalProperties": false
+}

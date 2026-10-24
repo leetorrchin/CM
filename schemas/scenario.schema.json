@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/scenario.schema.json",
+  "title": "Scenario",
+  "description": "A crowd and what happens to it. A run is seed + venue + scenario + planner.",
+  "type": "object",
+  "$defs": {
+    "share": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schema_version"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "venue": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "start_time": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "duration_s": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "mode": {
+      "$ref": "common.schema.json#/$defs/mode"
+    },
+    "crowd": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "spawn": {
+          "description": "Where people start. Shares sum to 1.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "zone": {
+                "$ref": "common.schema.json#/$defs/id"
+              },
+              "share": {
+                "$ref": "#/$defs/share"
+              }
+            },
+            "required": [
+              "zone",
+              "share"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "destinations": {
+          "description": "Where people want to go. Shares sum to 1. The id 'nearest_safe' means the nearest destination marked safe.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "common.schema.json#/$defs/id"
+              },
+              "share": {
+                "$ref": "#/$defs/share"
+              }
+            },
+            "required": [
+              "id",
+              "share"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "total",
+        "spawn",
+        "destinations"
+      ],
+      "additionalProperties": false
+    },
+    "groups": {
+      "type": "object",
+      "properties": {
+        "share_in_groups": {
+          "$ref": "#/$defs/share"
+        },
+        "mean_size": {
+          "type": "number",
+          "minimum": 2
+        }
+      },
+      "required": [
+        "share_in_groups",
+        "mean_size"
+      ],
+      "additionalProperties": false
+    },
+    "app_adoption": {
+      "description": "Share of people with the app, 0 to 1. If omitted, the global default in sim config applies (currently 1.0 for early testing, target 0.25).",
+      "$ref": "#/$defs/share"
+    },
+    "compliance": {
+      "description": "Probability a person follows guidance, per mode.",
+      "type": "object",
+      "properties": {
+        "normal": {
+          "$ref": "#/$defs/share"
+        },
+        "egress": {
+          "$ref": "#/$defs/share"
+        },
+        "evacuation": {
+          "$ref": "#/$defs/share"
+        }
+      },
+      "required": [
+        "normal",
+        "egress",
+        "evacuation"
+      ],
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at_s": {
+            "type": "number",
+            "minimum": 0
+          },
+          "type": {
+            "enum": [
+              "mode_change",
+              "closure",
+              "reopen"
+            ]
+          },
+          "mode": {
+            "$ref": "common.schema.json#/$defs/mode"
+          },
+          "threshold": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "destination": {
+            "$ref": "common.schema.json#/$defs/id",
+            "description": "Mode change only: everyone's new goal."
+          }
+        },
+        "required": [
+          "at_s",
+          "type"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "mode_change"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "mode"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "closure",
+                    "reopen"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "threshold"
+              ]
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sensors": {
+      "description": "Emulated sensors. A sensor kind that is left out is off. Camera and turnstile sensors only exist where the venue lists a matching sensor_site.",
+      "type": "object",
+      "properties": {
+        "camera": {
+          "type": "object",
+          "properties": {
+            "rel_sigma": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bias": {
+              "type": "number"
+            },
+            "lag_s": {
+              "type": "number",
+              "minimum": 0
+            },
+            "period_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "dropout_prob": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "outages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from_s": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "to_s": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "site": {
+                    "$ref": "common.schema.json#/$defs/id"
+                  }
+                },
+                "required": [
+                  "from_s",
+                  "to_s"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "turnstile": {
+          "type": "object",
+          "properties": {
+            "miss_rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "period_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "app_position": {
+          "type": "object",
+          "properties": {
+            "sigma_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "dropout_prob": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "sample_size": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "emit_updates": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "venue",
+    "seed",
+    "start_time",
+    "duration_s",
+    "mode",
+    "crowd",
+    "groups",
+    "compliance",
+    "events"
+  ],
+  "additionalProperties": false
+}

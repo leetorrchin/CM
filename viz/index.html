@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>crowD viewer</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <header>
+    <h1>crowD <span>run viewer</span></h1>
+    <div class="toolbar">
+      <label class="btn">Open files<input id="files" type="file" multiple accept=".json,.jsonl" hidden></label>
+      <span id="repoLoad" hidden>
+        <select id="repoVenue" aria-label="Venue from repo"></select>
+        <select id="repoRun" aria-label="Run from repo"></select>
+        <button id="repoAdd" class="btn" type="button">Add run</button>
+      </span>
+      <label>Level <select id="level"><option value="all">All</option></select></label>
+      <label class="check"><input id="labels" type="checkbox" checked> Names</label>
+    </div>
+  </header>
+  <div id="msg" role="status" hidden></div>
+  <main>
+    <section id="views">
+      <div id="empty">
+        <p>Open a venue file (<code>venues/*.json</code>) and one or more run logs (<code>runs/*.jsonl</code>), or drop them here.</p>
+        <p>Add two runs of the same venue to compare them side by side.</p>
+      </div>
+    </section>
+    <aside id="panel" aria-label="Run details"></aside>
+  </main>
+  <footer>
+    <button id="play" class="btn" type="button" aria-label="Play or pause">Play</button>
+    <select id="speed" aria-label="Playback speed">
+      <option value="1">1x</option><option value="2">2x</option><option value="5" selected>5x</option>
+      <option value="10">10x</option><option value="30">30x</option><option value="60">60x</option>
+    </select>
+    <div id="scrub"><input id="range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Time"><div id="ticks"></div></div>
+    <span id="clock">0:00 / 0:00</span>
+  </footer>
+  <div id="tip" hidden></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

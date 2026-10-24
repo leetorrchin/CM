@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/occupancy_reading.schema.json",
+  "title": "Occupancy reading",
+  "type": "object",
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "source_id": { "$ref": "common.schema.json#/$defs/id" },
+    "source_type": { "enum": ["app", "camera", "turnstile", "wifi", "ble", "manual", "emulated"] },
+    "target": { "$ref": "common.schema.json#/$defs/target_ref" },
+    "timestamp": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "count": { "type": "integer", "minimum": 0, "description": "People currently in the zone." },
+    "flow_pp_s": { "type": "number", "minimum": 0, "description": "People per second crossing the threshold." },
+    "confidence": { "$ref": "common.schema.json#/$defs/confidence" }
+  },
+  "required": ["schema_version", "source_id", "source_type", "target", "timestamp", "confidence"],
+  "anyOf": [ { "required": ["count"] }, { "required": ["flow_pp_s"] } ],
+  "additionalProperties": false
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1.0",
+  "id": "egress-end-of-night",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Headline act ends. Most of the crowd heads for the two exits. The south exit is a narrow bottleneck.",
+  "start_time": "2026-11-14T22:00:00+11:00",
+  "duration_s": 1800,
+  "mode": "egress",
+  "crowd": {
+    "total": 8000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.6
+      },
+      {
+        "zone": "main_field",
+        "share": 0.3
+      },
+      {
+        "zone": "food_court",
+        "share": 0.1
+      }
+    ],
+    "destinations": [
+      {
+        "id": "exit_south",
+        "share": 0.5
+      },
+      {
+        "id": "exit_north",
+        "share": 0.5
+      }
+    ]
+  },
+  "events": []
+}

@@ -1,0 +1,21 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+# node
+node_modules/
+dist/
+# runs (event logs are generated, reproducible from seed)
+runs/*
+!runs/.gitkeep
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+
+# generated venues and scenarios (reproducible from a seed)
+venues/generated/
+scenarios/generated/

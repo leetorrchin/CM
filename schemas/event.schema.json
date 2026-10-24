@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/event.schema.json",
+  "title": "Event log line",
+  "description": "One line of an event log (JSONL). Payload shape depends on type.",
+  "type": "object",
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "run_id": { "$ref": "common.schema.json#/$defs/id" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "timestamp": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "type": { "enum": ["run_start", "zone_state", "position_update", "reading", "plan", "mode_change", "closure", "metric", "run_end"] },
+    "data": { "type": "object" }
+  },
+  "required": ["schema_version", "run_id", "seq", "timestamp", "type", "data"],
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "position_update" } } }, "then": { "properties": { "data": { "$ref": "position_update.schema.json" } } } },
+    { "if": { "properties": { "type": { "const": "reading" } } }, "then": { "properties": { "data": { "$ref": "occupancy_reading.schema.json" } } } },
+    { "if": { "properties": { "type": { "const": "plan" } } }, "then": { "properties": { "data": { "$ref": "plan.schema.json" } } } }
+  ],
+  "additionalProperties": false
+}

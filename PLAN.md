@@ -1,6 +1,6 @@
 # crowD build plan
 
-Last updated 2026-10-24. Stack choices are proposals and can change at the end of Phase 0.
+Last updated 2026-10-24. Core decisions (Python, monorepo, vector multi-level venues, zone-level sim first, JSONL event log) are recorded in `docs/decisions.md`.
 
 ## Target
 
@@ -37,7 +37,7 @@ Early on there is no access to real crowds, so emulated inputs are first-class, 
 
 Rules:
 - Components communicate only through versioned message schemas. No shared globals, no reaching into another component's internals.
-- Dependencies point inward: `core/` depends on nothing in the repo, `sim/` only on `core/` and `template/`, `viz/` only on the event log and venue schemas.
+- Dependencies point inward: `core/` depends on nothing in the repo, `sim/` and `connectors/` only on `core/` and `schemas/`, `viz/` only on the event log and venue schemas.
 - The same server code runs against simulated or real inputs, chosen by configuration.
 - A run is a seed, a venue, a scenario and a planner. Re-running it gives the same result, so regressions are easy to spot.
 
@@ -105,20 +105,21 @@ Solver approach, in order of effort:
 ## Phases
 
 ### Phase 0: Spec (about 1 to 2 weeks)
-- Venue template format: zones, thresholds, pathways, destinations, one-way flags, capacities, floors, assembly points.
+- Venue format: vector polygons in metres, multi-level, zones, thresholds, pathways, destinations, one-way flags, capacities, assembly points. (Drafted, schema v0.1.0.)
 - Data models for entity, group, plan, mode and occupancy reading.
 - Pick one target festival layout (can be a realistic fictional one) and three scenarios: end-of-night egress, stage change, evacuation with a blocked exit.
 - Record decisions in `docs/`.
 - **Done when:** a hand-written JSON venue validates against the schema.
 
 ### Phase 1: Venue graph and baseline (1 to 2 weeks)
-- JSON Schema and validator in `template/`.
+- JSON Schema in `schemas/` and validator in `core/` (done in Phase 0, extend as needed).
 - Compiler from template to graph in `core/`.
 - Baseline shortest-path router with unit tests.
 - Example venues, including a festival layout with deliberate bottlenecks.
 - **Done when:** given a venue and entity positions, the router returns a path per entity.
 
 ### Phase 2: Emulation and visualiser (3 to 4 weeks)
+Progress: done are the clock, event log, zone-level engine, emulated people with groups and compliance, scenarios and metrics (baseline numbers in `docs/baseline-results.md`), the procedural venue and scenario generator, emulated cameras, turnstiles and app position noise, and visualiser v1 (replay, heatmap, queues, closures, timeline, side-by-side comparison). Remaining: Wi-Fi and BLE counters, manual operator input, a live (WebSocket) mode in the viewer, and wiring the sim to the server through the real interfaces.
 - Simulated clock, event log format, and the interfaces from the table above.
 - Discrete-time simulator on the venue graph with edge capacities and queueing at thresholds.
 - Emulated people with the behaviours listed above, including groups, compliance and noise.
@@ -198,7 +199,7 @@ Solver approach, in order of effort:
 
 ## Immediate next steps
 
-1. Choose or invent the target festival layout and write the three scenarios.
-2. Write the template schema and one example venue by hand, including the occupancy reading and group data models.
-3. Set up the repo skeleton (`template/`, `core/`, `sim/`, `viz/`, `docs/`) and CI running tests.
-4. Build the baseline router, the first emulated crowd and a minimal visualiser, so every later step can be seen.
+1. Done: example festival venue and the three scenarios (`scenarios/`).
+2. Write the venue schema and one example venue by hand, including the occupancy reading and group data models. (Done: see `schemas/` and `venues/`.)
+3. Repo skeleton (done: `schemas/`, `core/`, `sim/`, `connectors/`, `server/`, `docs/`). Still to do: CI running tests, and `viz/` project setup.
+4. Done: graph compiler and baseline router (`core/`), clock, event log, the first emulated crowd, venue generator and sensors (`sim/`), and the run viewer (`viz/`). Next: Phase 3, the congestion-aware optimiser, starting with a time-expanded flow planner for a single destination, benchmarked against the baseline on generated venues.

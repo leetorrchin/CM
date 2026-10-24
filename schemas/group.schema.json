@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/group.schema.json",
+  "title": "Group",
+  "type": "object",
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "member_ids": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/id" } },
+    "cohesion_weight": { "type": "number", "minimum": 0, "maximum": 1, "default": 1, "description": "How strongly the planner should avoid splitting this group. Scaled down in evacuation mode." },
+    "max_separation_m": { "type": "number", "exclusiveMinimum": 0, "default": 30 }
+  },
+  "required": ["schema_version", "id", "member_ids"],
+  "additionalProperties": false
+}

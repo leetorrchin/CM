@@ -1,0 +1,71 @@
+{
+  "schema_version": "0.1.0",
+  "id": "evacuation-blocked-exit",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Normal event until 5 minutes in, then evacuation is declared and the south exit is blocked. Everyone should reach the nearest safe destination.",
+  "start_time": "2026-11-14T21:00:00+11:00",
+  "duration_s": 1800,
+  "mode": "normal",
+  "crowd": {
+    "total": 8000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.4
+      },
+      {
+        "zone": "main_field",
+        "share": 0.3
+      },
+      {
+        "zone": "food_court",
+        "share": 0.15
+      },
+      {
+        "zone": "gate_plaza",
+        "share": 0.1
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.05
+      }
+    ],
+    "destinations": [
+      {
+        "id": "stage_a",
+        "share": 0.5
+      },
+      {
+        "id": "food",
+        "share": 0.3
+      },
+      {
+        "id": "toilets",
+        "share": 0.2
+      }
+    ]
+  },
+  "events": [
+    {
+      "at_s": 300,
+      "type": "mode_change",
+      "mode": "evacuation",
+      "destination": "nearest_safe"
+    },
+    {
+      "at_s": 300,
+      "type": "closure",
+      "threshold": "t_field_exit_south"
+    }
+  ]
+}

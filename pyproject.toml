@@ -1,0 +1,17 @@
+[project]
+name = "crowd"
+version = "0.0.0"
+description = "crowD workspace root"
+requires-python = ">=3.10"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.uv.workspace]
+members = ["core", "sim", "connectors", "server"]
+
+[tool.pytest.ini_options]
+testpaths = ["core/tests", "sim/tests", "connectors/tests", "server/tests"]
+
+[tool.ruff]
+line-length = 100

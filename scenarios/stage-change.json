@@ -1,0 +1,59 @@
+{
+  "schema_version": "0.1.0",
+  "id": "stage-change",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Set ends. Crowd leaves the stage for food, toilets and other places. The example venue has one stage, so this models dispersal from it. Revisit with a generated three-stage venue.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 1200,
+  "mode": "normal",
+  "crowd": {
+    "total": 8000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.75
+      },
+      {
+        "zone": "main_field",
+        "share": 0.15
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.1
+      }
+    ],
+    "destinations": [
+      {
+        "id": "food",
+        "share": 0.35
+      },
+      {
+        "id": "toilets",
+        "share": 0.25
+      },
+      {
+        "id": "stage_a",
+        "share": 0.25
+      },
+      {
+        "id": "meet_plaza",
+        "share": 0.1
+      },
+      {
+        "id": "first_aid",
+        "share": 0.05
+      }
+    ]
+  },
+  "events": []
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crowd.local/schemas/entity.schema.json",
+  "title": "Entity",
+  "type": "object",
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "group_id": { "$ref": "common.schema.json#/$defs/id" },
+    "has_app": { "type": "boolean" },
+    "needs_step_free": { "type": "boolean", "default": false },
+    "speed_factor": { "type": "number", "exclusiveMinimum": 0, "default": 1 },
+    "destination_id": { "$ref": "common.schema.json#/$defs/id" }
+  },
+  "required": ["schema_version", "id"],
+  "additionalProperties": false
+}

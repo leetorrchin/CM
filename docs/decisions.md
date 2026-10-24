@@ -73,3 +73,16 @@ Opens from a link, installs to the home screen (manifest, icons and a service wo
 
 ## 024. Venue editor and the three web apps share one Vite project (2026-10-24)
 `viz/` is now a multi-page Vite app: home, control room, attendee app, venue editor and run viewer, sharing the renderer and types. The editor draws zones (rectangle or polygon), gates (dragged along the shared edge of two zones, with the zones found automatically), and places, supports levels, undo and snapping to the grid and to other corners, validates against the server, and saves to `venues/user/` (git-ignored). The editor's exact position for a place is not saved because the schema places a destination in a zone only.
+
+## 025. Several events at once, joined by a short code (2026-10-24)
+The server holds a `SessionManager` of independent events, each with its own thread, lock and engine. Attendees join by a 6 character code (no look-alike letters, so no 0/O or 1/I), which doubles as the event id. Limits protect a laptop: 6 events, 120,000 simulated people in total, 300 phones per event. The old single-session endpoints are gone; `/api/join/{code}/...` is public and `/api/sessions/...` is for organisers.
+
+## 026. Accounts for organisers only (2026-10-24)
+Organisers sign in (roles `operator` and `viewer`); attendees never do. Passwords are scrypt hashed in `data/users.json`, tokens are HMAC signed with a key in `data/secret.key` and expire after 12 hours, and failed logins are throttled per address. A guest gets a random token when joining, which is the only thing that lets them read or change their own guidance. This is basic protection for a trusted deployment behind HTTPS, not a full identity system (no password reset, no SSO, no audit log). `CROWD_AUTH=off` exists for local demos and tests.
+
+## 027. Real positioning is a filtered zone report (2026-10-24)
+A phone sends GPS (or taps the map). The server converts it with the venue anchor (flat-earth approximation, fine at venue scale) and `PositionFilter` turns it into a zone: reject poor accuracy and far-off-venue fixes, require two consecutive fixes and 2 m clearance before changing zone. The engine then treats that person as "external": not moved by the simulation, still counted in occupancy and planning, and arrival is decided by the phone's zone. This keeps the planner unchanged and lets real and simulated people share one crowd. Indoor positioning (levels, Wi-Fi, BLE) is not solved: GPS has no floor, so multi-level zones need the tap fallback or a future indoor source.
+
+## 028. Arrival profiles and more scenarios (2026-10-24)
+`crowd.arrival` schedules when each unit appears; groups arrive as one. Nine scenarios now ship, covering entry, egress, a gate failure, closures, low adoption, group meet-ups and a dense stage front. Benchmarks are in `docs/scenarios.md`.
+

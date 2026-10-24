@@ -1,0 +1,43 @@
+{
+  "schema_version": "0.1.0",
+  "id": "meet-up",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.9,
+    "mean_size": 4.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Most people are in large groups and want to find each other at the meeting point. Tests that groups stay together.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 1800,
+  "mode": "normal",
+  "crowd": {
+    "total": 4000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.4
+      },
+      {
+        "zone": "main_field",
+        "share": 0.4
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.2
+      }
+    ],
+    "destinations": [
+      {
+        "id": "meet_plaza",
+        "share": 1.0
+      }
+    ]
+  },
+  "events": []
+}

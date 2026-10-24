@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from crowd_core.graph import compile_venue
 from crowd_core.planner import BaselinePlanner
 from crowd_core.scenario import load_scenario, scenario_errors

@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1.0",
+  "id": "low-adoption-evacuation",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.5,
+    "egress": 0.5,
+    "evacuation": 0.6
+  },
+  "description": "Evacuation with only 10 percent of people running the app and lower compliance. Tests how much the app helps the whole crowd.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 2400,
+  "mode": "normal",
+  "crowd": {
+    "total": 8000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.5
+      },
+      {
+        "zone": "main_field",
+        "share": 0.3
+      },
+      {
+        "zone": "food_court",
+        "share": 0.1
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.1
+      }
+    ],
+    "destinations": [
+      {
+        "id": "nearest_safe",
+        "share": 1.0
+      }
+    ]
+  },
+  "events": [
+    {
+      "at_s": 120,
+      "type": "mode_change",
+      "mode": "evacuation",
+      "destination": "nearest_safe"
+    }
+  ],
+  "app_adoption": 0.1
+}

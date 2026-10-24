@@ -16,7 +16,7 @@ import heapq
 import math
 import random
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from crowd_core.graph import VenueGraph
@@ -32,7 +32,7 @@ from .population import Person, spawn
 JAM_DENSITY_PP_M2 = 5.4   # density at which walking all but stops
 MIN_SLOWDOWN = 0.15
 SINK_KINDS = {"exit", "assembly_point"}
-ACTIVE = ("wait", "undecided", "stuck", "queued", "transit")
+ACTIVE = ("wait", "undecided", "stuck", "queued", "transit", "external")
 
 
 @dataclass(eq=False)
@@ -45,8 +45,11 @@ class Unit:
     u: float                 # fixed draw: follows guidance if u < compliance of the mode
     speed: float             # slowest member
     guide_id: str | None     # an app member whose guidance the unit uses
-    state: str = "wait"      # wait | undecided | stuck | queued | transit | done | gone
+    state: str = "wait"      # wait | undecided | stuck | queued | transit | external | done | gone
+    left: bool = False       # a guest who left the app; removed from the crowd
+    external: bool = False   # a real phone reports where this unit is; the simulator does not move it
     t_goal: float = 0.0
+    t_start: float = 0.0     # when the unit appears in the venue
     t_arrive: float | None = None
     edge: str | None = None
     next_zone: str | None = None
@@ -74,7 +77,7 @@ def build_units(people: list[Person], group_mode: str) -> list[Unit]:
         units.append(Unit(
             id=c[0].group if (len(c) > 1 and c[0].group) else c[0].id, members=c, zone=c[0].zone,
             dest=c[0].dest, has_app=bool(app), u=c[0].u, speed=min(m.speed for m in c),
-            guide_id=app[0].id if app else None))
+            guide_id=app[0].id if app else None, t_start=c[0].t_start))
     return units
 
 
@@ -125,8 +128,13 @@ class Simulation:
                     self.group_units.setdefault(un.members[0].group, []).append(un)
 
         self.occ: dict[str, int] = {z: 0 for z in vg.zones}
-        for un in self.units:
-            self.occ[un.zone] += un.size
+        self._sched: deque[Unit] = deque()
+        for un in sorted(self.units, key=lambda u: u.t_start):
+            if un.t_start > 0:
+                un.state, un.t_goal = "scheduled", un.t_start
+                self._sched.append(un)
+            else:
+                self.occ[un.zone] += un.size
         self.inbound: dict[str, int] = {z: 0 for z in vg.zones}
         self.queues: dict[str, deque[tuple[Unit, int]]] = {}
         self.qcount: dict[str, int] = {}
@@ -134,7 +142,7 @@ class Simulation:
         self.transit_n: dict[str, int] = {}
         self.heap: list[tuple[float, int, Unit]] = []
         self._seq = 0
-        self.pending: dict[int, Unit] = {id(u): u for u in self.units}
+        self.pending: dict[int, Unit] = {id(u): u for u in self.units if u.state != "scheduled"}
         self.plan_cache: dict[str, tuple[str, str | None, str]] = {}
         self._own: dict[str, dict] = {}
         self._targets: dict[str, set[str]] = {}
@@ -142,6 +150,9 @@ class Simulation:
         self.first_goal_change: float | None = None
         self.redirected = 0
         self.queue_switches = 0
+        self._replan_wanted = False
+        self._mode_dest: str | None = None
+        self._last_replan = -1e9
 
         self.peak_density: dict[str, float] = {}
         self.peak_queue: dict[str, int] = {}
@@ -202,6 +213,13 @@ class Simulation:
     # ------------------------------------------------------------------ decisions
     def _decide(self, un: Unit, t: float) -> None:
         self.pending.pop(id(un), None)
+        if un.left:
+            self.occ[un.zone] -= un.size
+            un.state = "gone"
+            return
+        if un.external:
+            un.state = "external"
+            return
         if un.zone in self._target_zones(un.dest):
             self._arrive(un, t)
             return
@@ -316,13 +334,20 @@ class Simulation:
             if e.get("destination"):
                 if self.first_goal_change is None:
                     self.first_goal_change = t
+                self._mode_dest = e["destination"]
                 for un in self.units:
                     if un.state == "gone":
                         continue
+                    if un.state == "scheduled":
+                        un.dest = e["destination"]
+                        continue
                     un.dest, un.t_goal, un.t_arrive = e["destination"], t, None
                     if un.state == "done":
-                        un.state = "wait"
-                        self.pending[id(un)] = un
+                        un.state = "external" if un.external else "wait"
+                        if not un.external:
+                            self.pending[id(un)] = un
+                    if un.external and un.state == "external" and un.zone in self._target_zones(un.dest):
+                        self._arrive(un, t)
                 self._drain_queues(lambda k: True)
         elif kind == "closure":
             self.closed.add(e["threshold"])
@@ -399,7 +424,7 @@ class Simulation:
                 self.peak_queue[k] = n
         split = total = 0
         for units in self.group_units.values():
-            live = [u for u in units if u.state != "gone"]
+            live = [u for u in units if u.state not in ("gone", "scheduled")]
             if len(live) >= 2:
                 total += 1
                 if len({f"edge:{u.edge}" if u.state == "transit" else u.zone for u in live}) > 1:
@@ -430,19 +455,72 @@ class Simulation:
             raise ValueError(f"unknown event type {event.get('type')!r}")
         self._injected.append(dict(event))
 
-    def add_guest(self, zone: str, dest: str = NEAREST_SAFE) -> str:
-        """Add one real user to the crowd. They always follow guidance."""
+    def add_guest(self, zone: str, dest: str = NEAREST_SAFE, external: bool = False) -> str:
+        """Add one real user to the crowd. They always follow guidance. If `external`, a phone
+        reports their position (see set_external_zone) and the simulator does not move them."""
         if zone not in self.vg.zones:
             raise KeyError(zone)
         n = sum(1 for p in self.people if p.id.startswith("guest-")) + 1
         p = Person(f"guest-{n}", None, zone, dest, True, 0.0, 1.0, t_goal=self._t)
         un = build_units([p], self.group_mode)[0]
+        un.external = external
         self.people.append(p)
         self.units.append(un)
         self.unit_of[p.id] = un
         self.occ[zone] += 1
         self.pending[id(un)] = un
         return p.id
+
+    def remove_guest(self, person_id: str) -> bool:
+        """A guest closed the app. They stop counting as part of the crowd."""
+        un = self.unit_of.get(person_id)
+        if un is None or not person_id.startswith("guest-") or un.state == "gone":
+            return False
+        un.left = True
+        self.pending.pop(id(un), None)
+        if un.state == "queued":
+            self._unqueue(un)
+        if un.state != "transit":
+            self.occ[un.zone] -= un.size
+            un.state = "gone"
+        return True
+
+    def set_external(self, person_id: str, on: bool) -> bool:
+        """Switch a guest between simulated movement and phone-reported position."""
+        un = self.unit_of.get(person_id)
+        if un is None or not person_id.startswith("guest-") or un.state == "gone":
+            return False
+        un.external = on
+        if on:
+            if un.state == "queued":
+                self._unqueue(un)
+            if un.state != "transit":
+                un.state = "external"
+                self.pending.pop(id(un), None)
+        elif un.state == "external":
+            un.state = "undecided"
+            self.pending[id(un)] = un
+        return True
+
+    def set_external_zone(self, person_id: str, zone: str) -> bool:
+        """A phone says this guest is now in `zone`. Ignored while they are crossing a threshold in
+        the simulation (they land first) or once they have left."""
+        un = self.unit_of.get(person_id)
+        if un is None or not un.external or un.state in ("gone", "transit") or zone not in self.vg.zones:
+            return False
+        if zone != un.zone:
+            self.occ[un.zone] -= un.size
+            self.occ[zone] += un.size
+            un.zone = zone
+            self._replan_wanted = True
+        if zone in self._target_zones(un.dest):
+            if un.state == "external":
+                self._arrive(un, self._t)
+        elif un.state == "done":
+            un.state, un.t_arrive = "external", None
+        elif un.state != "external":
+            un.state = "external"
+        return True
 
     def set_destination(self, person_id: str, dest: str) -> bool:
         """A user changes where they want to go. Allowed until they have left the venue."""
@@ -454,26 +532,45 @@ class Simulation:
             self.pending[id(un)] = un
         un.dest, un.t_goal, un.t_arrive = dest, self._t, None
         if un.state == "done":
-            un.state = "wait"
-            self.pending[id(un)] = un
+            un.state = "external" if un.external else "wait"
+            if not un.external:
+                self.pending[id(un)] = un
+        elif un.external and un.zone in self._target_zones(dest) and un.state == "external":
+            self._arrive(un, self._t)
         return True
 
     def _idle(self) -> bool:
-        return self._ei >= len(self._events) and not any(u.state in ACTIVE for u in self.units)
+        return (self._ei >= len(self._events) and not self._sched
+                and not any(u.state in ACTIVE for u in self.units))
+
+    def _arrivals(self, t: float) -> None:
+        while self._sched and self._sched[0].t_start <= t:
+            un = self._sched.popleft()
+            if un.left:
+                continue
+            un.state = "wait"
+            if self._mode_dest:
+                un.dest = self._mode_dest
+            self.occ[un.zone] += un.size
+            self.pending[id(un)] = un
+            self._replan_wanted = True
 
     def _tick(self) -> None:
-        dt, t = self.dt, self._step * self.dt
+        t = self._step * self.dt
         self._t = t
         self.clock.set(t)
         while self._injected:
             self._apply_event(self._injected.popleft(), t)
+        self._arrivals(t)
         while self._ei < len(self._events) and self._events[self._ei]["at_s"] <= t:
             self._apply_event(self._events[self._ei], t)
             self._ei += 1
-        if t >= self._next_replan:
+        if t >= self._next_replan or (self._replan_wanted and t - self._last_replan >= 2.0):
             self._replan(t)
             self._process_pending(t)
             self._next_replan = t + self.replan_s
+            self._replan_wanted = False
+            self._last_replan = t
         self._land(t)
         self._admit(t)
         if t >= self._next_log:
@@ -519,7 +616,7 @@ class Simulation:
             tid = un.edge.split(":", 1)[0]
             out.update(next_threshold=tid, next_zone=un.next_zone, queue_ahead=int(self.qcount.get(un.edge, 0)),
                        waited_s=round(self._t - un.queued_at, 1))
-        elif un.state in ("undecided", "wait", "stuck"):
+        elif un.state in ("undecided", "wait", "stuck", "external"):
             c = self.plan_cache.get(un.guide_id) if un.guide_id else None
             if c and c[0] == zone and c[1]:
                 th = self.vg.thresholds[c[1]]

@@ -47,7 +47,7 @@ function crowdData(): Plugin {
   };
 }
 
-const pages = ["index", "viewer", "live", "app", "editor"];
+const pages = ["index", "viewer", "live", "app", "editor", "login"];
 
 export default defineConfig({
   plugins: [crowdData()],

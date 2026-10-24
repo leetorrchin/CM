@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from crowd_sim.clock import SimClock
 from crowd_sim.run import run_scenario
 
@@ -132,3 +131,28 @@ def test_injected_evacuation_and_guest_guidance():
     assert sim.cleared == len(sim.people)
     with pytest.raises(ValueError):
         sim.inject({"type": "bogus"})
+
+
+def test_external_guest_follows_reported_position_only():
+    sim = _live_sim(200)
+    gid = sim.add_guest("main_field", "nearest_safe", external=True)
+    sim.advance(60)
+    g = sim.guidance(gid)
+    assert g["zone"] == "main_field" and g["state"] == "external"
+    assert g.get("next_threshold")            # planner still guides them
+    # phone says they walked into the south exit lane
+    assert sim.set_external_zone(gid, "exit_lane_south")
+    sim.advance(sim._t + 3)
+    assert sim.guidance(gid)["arrived"] is True
+    assert sim.set_external_zone(gid, "main_field") is False   # once out, stays out
+
+
+def test_guest_can_switch_between_phone_and_simulation():
+    sim = _live_sim(100)
+    gid = sim.add_guest("main_field", "nearest_safe", external=True)
+    sim.advance(20)
+    assert sim.guidance(gid)["zone"] == "main_field"
+    assert sim.set_external(gid, False)
+    sim.advance(sim._t + 400)
+    assert sim.guidance(gid)["arrived"] is True
+    assert sim.set_external("p00001", True) is False          # only guests

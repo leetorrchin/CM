@@ -2,7 +2,6 @@ import json
 import random
 
 import pytest
-
 from crowd_core.scenario import scenario_errors
 from crowd_core.venue import validate_venue
 from crowd_sim.venuegen import VenueParams, generate_scenarios, generate_venue

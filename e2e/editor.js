@@ -4,7 +4,7 @@ const SHOTS = process.env.SHOTS || require('os').tmpdir();
 (async () => {
   const b = await chromium.launch();
   const errs = [];
-  const pg = await (await b.newContext({ viewport: { width: 1300, height: 800 } })).newPage();
+  const pg = await (await require('./common').authed(b, { viewport: { width: 1300, height: 800 } })).ctx.newPage();
   pg.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
   pg.on('pageerror', e => errs.push('pageerror: ' + e.message));
   pg.on('dialog', d => d.accept());
@@ -36,7 +36,7 @@ const SHOTS = process.env.SHOTS || require('os').tmpdir();
   // make an invalid change: delete the gate then check
   await pg.fill('input[data-v=id]', 'e2e-venue'); await pg.dispatchEvent('input[data-v=id]', 'change');
   await pg.click('#try');
-  await pg.waitForURL('**/live.html', { timeout: 8000 });
+  await pg.waitForURL('**/live.html*', { timeout: 8000 });
   await pg.waitForSelector('#stats dt');
   await pg.waitForTimeout(2500);
   console.log('live venue select:', await pg.$eval('#venueSel', e => e.value), '| people:', (await pg.textContent('#stats')).slice(0, 40));

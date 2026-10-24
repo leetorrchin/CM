@@ -85,6 +85,32 @@
             ],
             "additionalProperties": false
           }
+        },
+        "arrival": {
+          "description": "Optional. People appear in their spawn zone over a time window instead of all at once. Groups arrive together.",
+          "type": "object",
+          "properties": {
+            "start_s": {
+              "type": "number",
+              "minimum": 0
+            },
+            "end_s": {
+              "type": "number",
+              "minimum": 0
+            },
+            "shape": {
+              "enum": [
+                "uniform",
+                "ramp",
+                "peak"
+              ]
+            }
+          },
+          "required": [
+            "start_s",
+            "end_s"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

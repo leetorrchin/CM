@@ -1,0 +1,148 @@
+Installing Python packages...
+Installing web packages...
+Building web apps...
+vite v5.4.21 building for production...
+transforming...
+✓ 23 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.87 kB │ gzip: 0.95 kB
+dist/app.html                     2.34 kB │ gzip: 0.95 kB
+dist/viewer.html                  2.42 kB │ gzip: 0.98 kB
+dist/editor.html                  2.59 kB │ gzip: 1.00 kB
+dist/live.html                    3.59 kB │ gzip: 1.30 kB
+dist/assets/editor-CT7xxxo8.css   1.01 kB │ gzip: 0.51 kB
+dist/assets/app-sXlgzsnI.css      1.19 kB │ gzip: 0.55 kB
+dist/assets/nav-B-nF65Iu.css      5.35 kB │ gzip: 1.70 kB
+dist/assets/index-8IbzQFgK.js     0.52 kB │ gzip: 0.32 kB
+dist/assets/nav-CaTbDLmj.js       0.71 kB │ gzip: 0.40 kB
+dist/assets/api-C4xWFB_S.js       1.06 kB │ gzip: 0.67 kB
+dist/assets/geom-Dihxr7Tr.js      1.37 kB │ gzip: 0.70 kB
+dist/assets/live-iZ1_SRyS.js      5.16 kB │ gzip: 2.28 kB
+dist/assets/render-CnRX_H1C.js    6.42 kB │ gzip: 2.76 kB
+dist/assets/app-BzwoiyDF.js       6.69 kB │ gzip: 2.85 kB
+dist/assets/viewer-Dpu3VBRa.js   11.53 kB │ gzip: 4.87 kB
+dist/assets/editor-D3VVXpUM.js   20.42 kB │ gzip: 7.32 kB
+✓ built in 692ms
+
+crowD is starting.
+  Control room:   http://localhost:8000/live.html
+  Venue editor:   http://localhost:8000/editor.html
+  On your phone (same Wi-Fi):  http://192.0.2.2:8000/app.html
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+INFO:     Started server process [1654]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:44762 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44770 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34118 - "GET /live.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34118 - "GET /assets/live-iZ1_SRyS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34134 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34166 - "GET /assets/render-CnRX_H1C.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34150 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34148 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34176 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:34148 - "GET /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34148 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "GET /api/planners HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "GET /api/scenarios?venue=example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "POST /api/control/mode HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34144 - "POST /api/control/closure HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /app.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /assets/app-BzwoiyDF.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59974 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59988 - "GET /assets/app-sXlgzsnI.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60000 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60006 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60022 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /assets/render-CnRX_H1C.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/people?limit=6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "POST /api/guest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/guidance/guest-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60032 - "WebSocket /ws/guide/guest-1" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:60048 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:60060 - "POST /api/control/mode HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60076 - "POST /api/guidance/guest-1/destination HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60076 - "GET /app.html HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51700 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60076 - "GET /assets/app-BzwoiyDF.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51702 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51716 - "GET /assets/render-CnRX_H1C.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51710 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51730 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51700 - "GET /assets/app-sXlgzsnI.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51700 - "GET /api/guidance/guest-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51746 - "WebSocket /ws/guide/guest-1" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:51754 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:51700 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/people?limit=6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/guidance/p00002 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51700 - "GET /api/venues/example-minimal-festival HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51766 - "WebSocket /ws/guide/p00002" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:51774 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:51700 - "GET /sw.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51782 - "GET /editor.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51782 - "GET /assets/editor-D3VVXpUM.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51802 - "GET /assets/editor-CT7xxxo8.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51826 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51816 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51794 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "GET /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "POST /api/venues/validate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "POST /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "GET /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "GET /live.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51842 - "GET /assets/live-iZ1_SRyS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51794 - "GET /assets/render-CnRX_H1C.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51816 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51802 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51842 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51826 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51846 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:51794 - "GET /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51826 - "GET /api/venues/e2e-venue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51826 - "GET /api/planners HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51826 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51826 - "GET /api/scenarios?venue=e2e-venue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38854 - "POST /api/session/restart HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38870 - "GET /live.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38870 - "GET /assets/live-DGVWnm-_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38892 - "GET /assets/nav-B-nF65Iu.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38882 - "GET /assets/nav-CaTbDLmj.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /assets/render-F_NtPOTh.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38910 - "GET /assets/geom-Dihxr7Tr.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38894 - "GET /assets/api-C4xWFB_S.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38922 - "WebSocket /ws/live" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:38916 - "GET /api/venues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /api/venues/e2e-venue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /api/planners HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /api/scenarios?venue=e2e-venue HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1654]

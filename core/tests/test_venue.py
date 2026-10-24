@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from crowd_core.schemas import schema_errors
 from crowd_core.venue import load_venue, validate_venue
 

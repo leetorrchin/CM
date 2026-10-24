@@ -1,14 +1,23 @@
-import { api, dark, esc, getVenue, socket, type Guidance, type LiveMsg } from "./api";
+import { api, dark, esc, socket, type Guidance, type JoinInfo, type LiveMsg } from "./api";
 import { RunView } from "./render";
 import type { RunLog, Venue } from "./types";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const KEY = "crowd.pid";
+const KEY = "crowd.guest";
+interface Saved { code: string; pid: string; token: string }
 const safe = <T>(f: () => T, d: T): T => { try { return f(); } catch { return d; } };
 
 let venue: Venue | null = null;
 let view: RunView | null = null;
 let pid: string | null = null;
+let code = "";
+let token = "";
+let info: JoinInfo | null = null;
+let watchId: number | null = null;
+let lastSend = 0;
+let tapMode = false;
+const gh = () => ({ "X-Guest-Token": token });
+const jb = () => `/api/join/${encodeURIComponent(code)}`;
 let g: Guidance | null = null;
 let live: LiveMsg | null = null;
 let stops: Array<() => void> = [];
@@ -109,31 +118,77 @@ function frame(ts: number): void {
   requestAnimationFrame(frame);
 }
 
-async function enter(id: string): Promise<void> {
-  pid = id;
-  safe(() => localStorage.setItem(KEY, id), undefined);
-  history.replaceState(null, "", `#p=${encodeURIComponent(id)}`);
-  const first = await api<Guidance>(`/api/guidance/${encodeURIComponent(id)}`);
-  const h = await api<{ session: { venue: string } | null }>("/api/health");
-  if (!h.session) throw new Error("no session is running");
-  venue = await getVenue(h.session.venue);
+function setLoc(text: string, bad = false): void {
+  const el = $("locStatus");
+  el.textContent = text;
+  el.classList.toggle("err", bad);
+}
+
+async function sendPosition(body: Record<string, unknown>): Promise<void> {
+  if (!pid || !pid.startsWith("guest-")) return;
+  try {
+    const r = await api<{ status: string; zone: string | null; off_venue_m: number }>(`${jb()}/guest/${encodeURIComponent(pid)}/position`, body, "POST", gh());
+    if (r.status === "inaccurate") setLoc("Location too vague here. Move to a clearer spot or tap the map.", true);
+    else if (r.status === "off_venue") setLoc(`You look to be ${Math.round(r.off_venue_m)} m outside the venue.`, true);
+    else setLoc(r.zone ? `Located: ${zoneName(r.zone)}` : "Locating…");
+  } catch (e) { setLoc((e as Error).message, true); }
+}
+
+function startLocation(): void {
+  if (watchId !== null || !("geolocation" in navigator)) { if (!("geolocation" in navigator)) setLoc("This phone cannot share its location here. Tap the map instead.", true); return; }
+  setLoc("Locating…");
+  watchId = navigator.geolocation.watchPosition((p) => {
+    const now = Date.now();
+    if (now - lastSend < 2000) return;
+    lastSend = now;
+    void sendPosition({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy_m: p.coords.accuracy });
+  }, (e) => {
+    if (e.code === 1) {
+      setLoc("Location permission was denied. Tap the map instead.", true);
+      stopLocation(false);
+    } else setLoc("No location fix right now. Still trying.", true);
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+  ($("useLoc") as HTMLInputElement).checked = true;
+}
+
+function stopLocation(report = true): void {
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+  watchId = null;
+  ($("useLoc") as HTMLInputElement).checked = false;
+  if (report && pid) void api(`${jb()}/guest/${encodeURIComponent(pid)}/mode`, { external: false }, "POST", gh()).catch(() => {});
+  if (report) setLoc("Location off. Moving as the simulation says.");
+}
+
+async function enter(saved: Saved): Promise<void> {
+  code = saved.code; pid = saved.pid; token = saved.token;
+  const guest = pid.startsWith("guest-");
+  const hdr = guest ? gh() : undefined;
+  const first = await api<Guidance>(`${jb()}/guest/${encodeURIComponent(pid)}/guidance`, undefined, "GET", hdr);
+  info = await api<JoinInfo>(jb());
+  venue = await api<Venue>(`${jb()}/venue`);
+  safe(() => localStorage.setItem(KEY, JSON.stringify(saved)), undefined);
+  history.replaceState(null, "", `?s=${encodeURIComponent(code)}`);
   log.venueId = venue.id;
   view = new RunView($("cv") as HTMLCanvasElement, venue, log);
   new ResizeObserver(() => view?.resize()).observe($("map"));
   g = first;
-  const isGuest = id.startsWith("guest-");
-  $("destRow").hidden = !isGuest;
-  if (isGuest) {
+  $("destRow").hidden = !guest;
+  $("locCard").hidden = !guest;
+  $("eventName").textContent = info.name;
+  const hasGps = info.has_anchor && "geolocation" in navigator;
+  ($("useLocRow") as HTMLElement).hidden = !hasGps;
+  setLoc(hasGps ? "Off. Turn on to use your real position." : "Tap the map where you are to update your position.");
+  if (guest) {
     const sel = $("dest") as HTMLSelectElement;
     sel.innerHTML = `<option value="nearest_safe">Nearest safe exit</option>` +
-      (venue.destinations ?? []).filter((d) => d.kind !== "entry").map((d) => `<option value="${esc(d.id)}">${esc(d.name ?? d.id)}</option>`).join("");
+      info.destinations.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("");
     sel.value = first.destination;
-    sel.onchange = () => void api(`/api/guidance/${encodeURIComponent(id)}/destination`, { destination: sel.value }).catch(() => {});
+    sel.onchange = () => void api(`${jb()}/guest/${encodeURIComponent(pid!)}/destination`, { destination: sel.value }, "POST", gh()).catch(() => {});
   }
   stops.forEach((s) => s());
   stops = [
-    socket(`/ws/guide/${encodeURIComponent(id)}`, (m) => { g = m; render(); }),
-    socket("/ws/live", (m) => { if (m.type === "state") live = m; }),
+    socket(`/ws/join/${encodeURIComponent(code)}/guide/${encodeURIComponent(pid)}${guest ? `?token=${encodeURIComponent(token)}` : ""}`, (m) => { g = m; render(); }),
+    socket(`/ws/join/${encodeURIComponent(code)}/live`, (m) => { if (m.type === "state") live = m; }),
   ];
   show("main");
   render();
@@ -142,58 +197,94 @@ async function enter(id: string): Promise<void> {
 function leave(): void {
   stops.forEach((s) => s());
   stops = [];
-  pid = null;
+  if (watchId !== null) stopLocation(false);
+  if (pid?.startsWith("guest-")) void api(`${jb()}/guest/${encodeURIComponent(pid)}`, undefined, "DELETE", gh()).catch(() => {});
+  pid = null; token = "";
   safe(() => localStorage.removeItem(KEY), undefined);
   history.replaceState(null, "", location.pathname);
   $("banner").hidden = true;
   void showJoin();
 }
 
-async function showJoin(): Promise<void> {
-  show("join");
+async function findEvent(c: string): Promise<void> {
   const err = $("joinErr");
   err.hidden = true;
   try {
-    const h = await api<{ session: { venue: string } | null }>("/api/health");
-    if (!h.session) throw new Error("No event is running right now. Ask the organiser to start a session in the control room.");
-    venue = await getVenue(h.session.venue);
-    const crowdZones = venue.zones.filter((z) => z.kind !== "restricted");
-    $("where").innerHTML = crowdZones.map((z) => `<option value="${esc(z.id)}">${esc(z.name ?? z.id)}</option>`).join("");
+    info = await api<JoinInfo>(`/api/join/${encodeURIComponent(c.trim())}`);
+    code = info.id;
+    $("step1").hidden = true;
+    $("step2").hidden = false;
+    $("evTitle").textContent = info.name;
+    $("where").innerHTML = info.zones.map((z) => `<option value="${esc(z.id)}">${esc(z.name)}</option>`).join("");
     $("to").innerHTML = `<option value="nearest_safe">Nearest safe exit</option>` +
-      (venue.destinations ?? []).filter((d) => d.kind !== "entry").map((d) => `<option value="${esc(d.id)}">${esc(d.name ?? d.id)}</option>`).join("");
-    const people = await api<{ id: string; group_size: number; zone: string }[]>("/api/people?limit=6");
-    $("people").innerHTML = people.map((p) =>
-      `<li><button data-pid="${esc(p.id)}" type="button">${esc(p.id)} · ${esc(zoneName(p.zone))}${p.group_size > 1 ? ` · group of ${p.group_size}` : ""}</button></li>`).join("");
+      info.destinations.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join("");
+    const demo = $("demoBox");
+    demo.hidden = !info.demo_people;
+    if (info.demo_people) {
+      venue = await api<Venue>(`${jb()}/venue`);
+      const people = await api<{ id: string; group_size: number; zone: string }[]>(`${jb()}/people?limit=6`);
+      $("people").innerHTML = people.map((p) =>
+        `<li><button data-pid="${esc(p.id)}" type="button">${esc(p.id)} · ${esc(zoneName(p.zone))}${p.group_size > 1 ? ` · group of ${p.group_size}` : ""}</button></li>`).join("");
+    }
   } catch (e) {
     err.hidden = false;
     err.textContent = (e as Error).message;
   }
 }
 
+async function showJoin(): Promise<void> {
+  show("join");
+  $("step1").hidden = false;
+  $("step2").hidden = true;
+  const want = new URLSearchParams(location.search).get("s");
+  if (want) { ($("codeIn") as HTMLInputElement).value = want.toUpperCase(); await findEvent(want); }
+}
+
 function wire(): void {
+  $("find").onclick = () => void findEvent(($("codeIn") as HTMLInputElement).value);
+  ($("codeIn") as HTMLInputElement).addEventListener("keydown", (e) => { if (e.key === "Enter") $("find").click(); });
+  $("back").onclick = () => { $("step1").hidden = false; $("step2").hidden = true; };
   $("joinBtn").onclick = async () => {
     try {
-      const r = await api<{ person_id: string }>("/api/guest", {
+      const r = await api<{ person_id: string; token: string }>(`${jb()}/guest`, {
         zone: ($("where") as HTMLSelectElement).value, destination: ($("to") as HTMLSelectElement).value });
-      await enter(r.person_id);
+      await enter({ code, pid: r.person_id, token: r.token });
     } catch (e) { $("joinErr").hidden = false; $("joinErr").textContent = (e as Error).message; }
   };
   $("people").addEventListener("click", async (e) => {
     const id = (e.target as HTMLElement).closest("button")?.dataset.pid;
     if (!id) return;
-    try { await enter(id); } catch (err) { $("joinErr").hidden = false; $("joinErr").textContent = (err as Error).message; }
+    try { await enter({ code, pid: id, token: "" }); } catch (err) { $("joinErr").hidden = false; $("joinErr").textContent = (err as Error).message; }
   });
   $("leave").onclick = leave;
+  $("useLoc").addEventListener("change", (e) => (e.target as HTMLInputElement).checked ? startLocation() : stopLocation());
+  $("tapBtn").onclick = () => {
+    tapMode = !tapMode;
+    $("tapBtn").textContent = tapMode ? "Tap the map now" : "Set my position on the map";
+    $("tapBtn").classList.toggle("on", tapMode);
+  };
+  $("cv").addEventListener("click", (e) => {
+    if (!tapMode || !view || !pid?.startsWith("guest-")) return;
+    const r = ($("cv") as HTMLCanvasElement).getBoundingClientRect();
+    const [x, y] = view.tr.toWorld(e.clientX - r.left, e.clientY - r.top);
+    const z = view.zoneAt(e.clientX - r.left, e.clientY - r.top, "all");
+    if (!z) { setLoc("Tap inside a zone.", true); return; }
+    tapMode = false;
+    $("tapBtn").textContent = "Set my position on the map";
+    $("tapBtn").classList.remove("on");
+    if (watchId !== null) stopLocation(false);
+    void sendPosition({ x, y, accuracy_m: 1 });
+  });
 }
 
 async function start(): Promise<void> {
   wire();
   requestAnimationFrame(frame);
   if (import.meta.env.PROD && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
-  const fromHash = new URLSearchParams(location.hash.slice(1)).get("p");
-  const saved = fromHash ?? safe(() => localStorage.getItem(KEY), null);
-  if (saved) {
-    try { await enter(saved); return; } catch { /* person gone: fall through to join */ }
+  const want = new URLSearchParams(location.search).get("s")?.toUpperCase();
+  const saved = safe<Saved | null>(() => JSON.parse(localStorage.getItem(KEY) ?? "null"), null);
+  if (saved && (!want || want === saved.code.toUpperCase())) {
+    try { await enter(saved); return; } catch { safe(() => localStorage.removeItem(KEY), undefined); }
   }
   await showJoin();
 }

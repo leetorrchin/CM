@@ -18,22 +18,23 @@ It installs packages, builds the web apps and starts the server. Open:
 
 | Page | Address | For |
 |---|---|---|
-| Control room | http://localhost:8000/live.html | Watch the crowd, switch mode, close gates, restart the session |
-| Attendee app | http://localhost:8000/app.html | A phone view: your route, queue and group. On a phone use the address `run.sh` prints (same Wi-Fi) |
+| Sign in | http://localhost:8000/login.html | Organiser pages ask for it. First start prints an `admin` password in the terminal (or set `CROWD_ADMIN_PASSWORD`) |
+| Control room | http://localhost:8000/live.html | Run several events, each with a join code. Watch the crowd, switch mode, close gates |
+| Attendee app | http://localhost:8000/app.html?s=DEMO | A phone view: join with an event code (`DEMO` is running at start), get your route, queue and group, optionally share your real location. On a phone use the address `run.sh` prints (same Wi-Fi) |
 | Venue editor | http://localhost:8000/editor.html | Draw zones, gates and places, then press "Try it" |
 | Run viewer | http://localhost:8000/viewer.html | Replay saved simulation runs |
 
 Prefer Docker? `docker compose up --build`, then open http://localhost:8000. Venues you draw are kept in `venues/user/`.
 
-A 60 second tour: open the control room, press **Evacuate** twice (it asks you to confirm), click a gate on the map to close it, and watch the queues reroute. Open the attendee app in another tab, press Start, and see the instruction change to an evacuation route.
+A 60 second tour: sign in, open the control room, press **Evacuate** twice (it asks you to confirm), click a gate on the map to close it, and watch the queues reroute. Open `/app.html?s=DEMO` in another tab, press Start, and see the instruction change to an evacuation route. Start a second event from the control room and switch between them.
 
 ## MVP scope and limits
 
-In the MVP: the realtime server (REST and WebSocket), the control room, the attendee web app (installable on a phone), the venue editor, three planners (queue-aware, flow, adaptive) plus the baseline, and an emulated crowd with groups.
+In the MVP: the realtime server (REST and WebSocket) running several events at once, organiser sign in with roles, the control room, the attendee web app (installable, joins by code, optional real location), the venue editor, three planners (queue-aware, flow, adaptive) plus the baseline, and an emulated crowd with groups and nine scenarios (see [docs/scenarios.md](docs/scenarios.md)).
 
 Not in the MVP, and worth knowing before anyone relies on it:
-- **The crowd is simulated.** Attendee positions on a real phone are picked from a list, not taken from GPS or Wi-Fi. Real positioning, camera and turnstile connectors, and sensor fusion are future work (the sensor emulators and schemas exist).
-- **One live session at a time, no accounts or logins.** Anyone who can reach the server can control it. Keep it on a trusted network.
+- **The rest of the crowd is simulated.** A phone can report its real GPS position (needs the venue to have an `anchor`, and HTTPS or localhost) or tap the map, and joins the simulated crowd as a real person. GPS gives no floor, so multi-level venues need the tap fallback. Camera and turnstile connectors and sensor fusion are future work (the sensor emulators and schemas exist).
+- **Basic accounts only.** Organisers sign in; there is no password reset, SSO or audit log. Put it behind HTTPS outside a trusted network. Up to 6 events at once by default.
 - **Not safety certified.** Do not use it to guide a real evacuation.
 - Planner settings are tuned on generated venues only. Numbers are in [docs/benchmarks.md](docs/benchmarks.md).
 

@@ -1,0 +1,43 @@
+{
+  "schema_version": "0.1.0",
+  "id": "dense-dispersal",
+  "venue": "example-minimal-festival",
+  "seed": 42,
+  "groups": {
+    "share_in_groups": 0.6,
+    "mean_size": 3.0
+  },
+  "compliance": {
+    "normal": 0.7,
+    "egress": 0.7,
+    "evacuation": 0.85
+  },
+  "description": "Very dense stage front with a single narrow route out. Stress test for crush risk and for how well planners spread load.",
+  "start_time": "2026-11-14T19:30:00+11:00",
+  "duration_s": 3000,
+  "mode": "egress",
+  "crowd": {
+    "total": 14000,
+    "spawn": [
+      {
+        "zone": "stage_a_front",
+        "share": 0.85
+      },
+      {
+        "zone": "grandstand",
+        "share": 0.15
+      }
+    ],
+    "destinations": [
+      {
+        "id": "exit_south",
+        "share": 0.5
+      },
+      {
+        "id": "exit_north",
+        "share": 0.5
+      }
+    ]
+  },
+  "events": []
+}

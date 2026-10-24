@@ -3,67 +3,464 @@
   "id": "example-minimal-festival",
   "name": "Minimal example festival",
   "units": "metres",
+  "anchor": {
+    "lat": -33.8975,
+    "lon": 151.23,
+    "rotation_deg": 0
+  },
   "levels": [
-    { "id": "ground", "name": "Ground", "elevation_m": 0 },
-    { "id": "upper", "name": "Grandstand deck", "elevation_m": 4 }
+    {
+      "id": "ground",
+      "name": "Ground",
+      "elevation_m": 0
+    },
+    {
+      "id": "upper",
+      "name": "Grandstand deck",
+      "elevation_m": 4
+    }
   ],
   "zones": [
-    { "id": "gate_plaza", "name": "Gate plaza", "level": "ground", "kind": "open_area",
-      "polygon": [[0, 0], [60, 0], [60, 40], [0, 40]] },
-    { "id": "assembly_field", "name": "Western assembly field", "level": "ground", "kind": "assembly_point",
-      "polygon": [[-60, 0], [0, 0], [0, 40], [-60, 40]] },
-    { "id": "main_field", "name": "Main field", "level": "ground", "kind": "open_area",
-      "polygon": [[60, 0], [200, 0], [200, 120], [60, 120]] },
-    { "id": "stage_a_front", "name": "Stage A front", "level": "ground", "kind": "stage_front",
-      "polygon": [[200, 30], [260, 30], [260, 90], [200, 90]],
-      "capacity": { "max_density_pp_m2": 4.0 } },
-    { "id": "food_court", "name": "Food court", "level": "ground", "kind": "concourse",
-      "polygon": [[60, 120], [200, 120], [200, 160], [60, 160]] },
-    { "id": "exit_lane_south", "name": "South exit lane", "level": "ground", "kind": "corridor",
-      "polygon": [[110, -30], [136, -30], [136, 0], [110, 0]] },
-    { "id": "exit_north", "name": "North exit", "level": "ground", "kind": "corridor",
-      "polygon": [[60, 160], [200, 160], [200, 180], [60, 180]] },
-    { "id": "grandstand", "name": "Grandstand", "level": "upper", "kind": "seating",
-      "polygon": [[200, 95], [260, 95], [260, 115], [200, 115]] }
+    {
+      "id": "gate_plaza",
+      "name": "Gate plaza",
+      "level": "ground",
+      "kind": "open_area",
+      "polygon": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          0
+        ],
+        [
+          60,
+          40
+        ],
+        [
+          0,
+          40
+        ]
+      ]
+    },
+    {
+      "id": "assembly_field",
+      "name": "Western assembly field",
+      "level": "ground",
+      "kind": "assembly_point",
+      "polygon": [
+        [
+          -60,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          40
+        ],
+        [
+          -60,
+          40
+        ]
+      ]
+    },
+    {
+      "id": "main_field",
+      "name": "Main field",
+      "level": "ground",
+      "kind": "open_area",
+      "polygon": [
+        [
+          60,
+          0
+        ],
+        [
+          200,
+          0
+        ],
+        [
+          200,
+          120
+        ],
+        [
+          60,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "stage_a_front",
+      "name": "Stage A front",
+      "level": "ground",
+      "kind": "stage_front",
+      "polygon": [
+        [
+          200,
+          30
+        ],
+        [
+          260,
+          30
+        ],
+        [
+          260,
+          90
+        ],
+        [
+          200,
+          90
+        ]
+      ],
+      "capacity": {
+        "max_density_pp_m2": 4.0
+      }
+    },
+    {
+      "id": "food_court",
+      "name": "Food court",
+      "level": "ground",
+      "kind": "concourse",
+      "polygon": [
+        [
+          60,
+          120
+        ],
+        [
+          200,
+          120
+        ],
+        [
+          200,
+          160
+        ],
+        [
+          60,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "exit_lane_south",
+      "name": "South exit lane",
+      "level": "ground",
+      "kind": "corridor",
+      "polygon": [
+        [
+          110,
+          -30
+        ],
+        [
+          136,
+          -30
+        ],
+        [
+          136,
+          0
+        ],
+        [
+          110,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "exit_north",
+      "name": "North exit",
+      "level": "ground",
+      "kind": "corridor",
+      "polygon": [
+        [
+          60,
+          160
+        ],
+        [
+          200,
+          160
+        ],
+        [
+          200,
+          180
+        ],
+        [
+          60,
+          180
+        ]
+      ]
+    },
+    {
+      "id": "grandstand",
+      "name": "Grandstand",
+      "level": "upper",
+      "kind": "seating",
+      "polygon": [
+        [
+          200,
+          95
+        ],
+        [
+          260,
+          95
+        ],
+        [
+          260,
+          115
+        ],
+        [
+          200,
+          115
+        ]
+      ]
+    }
   ],
   "thresholds": [
-    { "id": "t_plaza_field", "name": "Main gate", "kind": "gate", "from_zone": "gate_plaza", "to_zone": "main_field",
-      "segment": [[60, 14], [60, 26]], "width_m": 12 },
-    { "id": "t_plaza_assembly", "kind": "opening", "from_zone": "gate_plaza", "to_zone": "assembly_field",
-      "segment": [[0, 15], [0, 25]], "width_m": 10 },
-    { "id": "t_field_stage", "kind": "opening", "from_zone": "main_field", "to_zone": "stage_a_front",
-      "segment": [[200, 40], [200, 80]], "width_m": 40 },
-    { "id": "t_field_food", "kind": "opening", "from_zone": "main_field", "to_zone": "food_court",
-      "segment": [[100, 120], [160, 120]], "width_m": 60 },
-    { "id": "t_field_exit_south", "name": "South exit gate (bottleneck)", "kind": "gate",
-      "from_zone": "main_field", "to_zone": "exit_lane_south",
-      "segment": [[120, 0], [126, 0]], "width_m": 6 },
-    { "id": "t_food_exit_north", "kind": "opening", "from_zone": "food_court", "to_zone": "exit_north",
-      "segment": [[100, 160], [160, 160]], "width_m": 60 },
-    { "id": "t_stage_grandstand_stairs", "kind": "stairs", "from_zone": "stage_a_front", "to_zone": "grandstand",
-      "segment": [[230, 90], [240, 90]], "width_m": 3, "step_free": false },
-    { "id": "t_field_grandstand_ramp", "kind": "ramp", "from_zone": "main_field", "to_zone": "grandstand",
-      "segment": [[200, 100], [200, 104]], "width_m": 4, "step_free": true }
+    {
+      "id": "t_plaza_field",
+      "name": "Main gate",
+      "kind": "gate",
+      "from_zone": "gate_plaza",
+      "to_zone": "main_field",
+      "segment": [
+        [
+          60,
+          14
+        ],
+        [
+          60,
+          26
+        ]
+      ],
+      "width_m": 12
+    },
+    {
+      "id": "t_plaza_assembly",
+      "kind": "opening",
+      "from_zone": "gate_plaza",
+      "to_zone": "assembly_field",
+      "segment": [
+        [
+          0,
+          15
+        ],
+        [
+          0,
+          25
+        ]
+      ],
+      "width_m": 10
+    },
+    {
+      "id": "t_field_stage",
+      "kind": "opening",
+      "from_zone": "main_field",
+      "to_zone": "stage_a_front",
+      "segment": [
+        [
+          200,
+          40
+        ],
+        [
+          200,
+          80
+        ]
+      ],
+      "width_m": 40
+    },
+    {
+      "id": "t_field_food",
+      "kind": "opening",
+      "from_zone": "main_field",
+      "to_zone": "food_court",
+      "segment": [
+        [
+          100,
+          120
+        ],
+        [
+          160,
+          120
+        ]
+      ],
+      "width_m": 60
+    },
+    {
+      "id": "t_field_exit_south",
+      "name": "South exit gate (bottleneck)",
+      "kind": "gate",
+      "from_zone": "main_field",
+      "to_zone": "exit_lane_south",
+      "segment": [
+        [
+          120,
+          0
+        ],
+        [
+          126,
+          0
+        ]
+      ],
+      "width_m": 6
+    },
+    {
+      "id": "t_food_exit_north",
+      "kind": "opening",
+      "from_zone": "food_court",
+      "to_zone": "exit_north",
+      "segment": [
+        [
+          100,
+          160
+        ],
+        [
+          160,
+          160
+        ]
+      ],
+      "width_m": 60
+    },
+    {
+      "id": "t_stage_grandstand_stairs",
+      "kind": "stairs",
+      "from_zone": "stage_a_front",
+      "to_zone": "grandstand",
+      "segment": [
+        [
+          230,
+          90
+        ],
+        [
+          240,
+          90
+        ]
+      ],
+      "width_m": 3,
+      "step_free": false
+    },
+    {
+      "id": "t_field_grandstand_ramp",
+      "kind": "ramp",
+      "from_zone": "main_field",
+      "to_zone": "grandstand",
+      "segment": [
+        [
+          200,
+          100
+        ],
+        [
+          200,
+          104
+        ]
+      ],
+      "width_m": 4,
+      "step_free": true
+    }
   ],
   "pathways": [
-    { "id": "evac_south", "name": "Evacuation route south", "zones": ["main_field", "exit_lane_south"],
-      "one_way": true, "purpose": "evacuation" },
-    { "id": "evac_north", "name": "Evacuation route north", "zones": ["main_field", "food_court", "exit_north"],
-      "one_way": true, "purpose": "evacuation" }
+    {
+      "id": "evac_south",
+      "name": "Evacuation route south",
+      "zones": [
+        "main_field",
+        "exit_lane_south"
+      ],
+      "one_way": true,
+      "purpose": "evacuation"
+    },
+    {
+      "id": "evac_north",
+      "name": "Evacuation route north",
+      "zones": [
+        "main_field",
+        "food_court",
+        "exit_north"
+      ],
+      "one_way": true,
+      "purpose": "evacuation"
+    }
   ],
   "destinations": [
-    { "id": "gate_entry", "name": "Entry", "kind": "entry", "zone": "gate_plaza" },
-    { "id": "meet_plaza", "name": "Meeting point", "kind": "meeting_point", "zone": "gate_plaza" },
-    { "id": "stage_a", "name": "Stage A", "kind": "stage", "zone": "stage_a_front" },
-    { "id": "food", "name": "Food stalls", "kind": "food", "zone": "food_court" },
-    { "id": "toilets", "name": "Toilets", "kind": "toilets", "zone": "food_court" },
-    { "id": "first_aid", "name": "First aid", "kind": "medical", "zone": "food_court" },
-    { "id": "exit_south", "name": "South exit", "kind": "exit", "zone": "exit_lane_south", "safe": true },
-    { "id": "exit_north", "name": "North exit", "kind": "exit", "zone": "exit_north", "safe": true },
-    { "id": "assembly_west", "name": "Western assembly", "kind": "assembly_point", "zone": "assembly_field", "safe": true }
+    {
+      "id": "gate_entry",
+      "name": "Entry",
+      "kind": "entry",
+      "zone": "gate_plaza"
+    },
+    {
+      "id": "meet_plaza",
+      "name": "Meeting point",
+      "kind": "meeting_point",
+      "zone": "gate_plaza"
+    },
+    {
+      "id": "stage_a",
+      "name": "Stage A",
+      "kind": "stage",
+      "zone": "stage_a_front"
+    },
+    {
+      "id": "food",
+      "name": "Food stalls",
+      "kind": "food",
+      "zone": "food_court"
+    },
+    {
+      "id": "toilets",
+      "name": "Toilets",
+      "kind": "toilets",
+      "zone": "food_court"
+    },
+    {
+      "id": "first_aid",
+      "name": "First aid",
+      "kind": "medical",
+      "zone": "food_court"
+    },
+    {
+      "id": "exit_south",
+      "name": "South exit",
+      "kind": "exit",
+      "zone": "exit_lane_south",
+      "safe": true
+    },
+    {
+      "id": "exit_north",
+      "name": "North exit",
+      "kind": "exit",
+      "zone": "exit_north",
+      "safe": true
+    },
+    {
+      "id": "assembly_west",
+      "name": "Western assembly",
+      "kind": "assembly_point",
+      "zone": "assembly_field",
+      "safe": true
+    }
   ],
   "sensor_sites": [
-    { "id": "cam_stage_a", "kind": "camera", "covers": [{ "kind": "zone", "id": "stage_a_front" }] },
-    { "id": "turnstile_main", "kind": "turnstile", "covers": [{ "kind": "threshold", "id": "t_plaza_field" }] }
+    {
+      "id": "cam_stage_a",
+      "kind": "camera",
+      "covers": [
+        {
+          "kind": "zone",
+          "id": "stage_a_front"
+        }
+      ]
+    },
+    {
+      "id": "turnstile_main",
+      "kind": "turnstile",
+      "covers": [
+        {
+          "kind": "threshold",
+          "id": "t_plaza_field"
+        }
+      ]
+    }
   ]
 }

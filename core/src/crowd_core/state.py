@@ -27,5 +27,9 @@ class LiveState:
     entities: list[EntityState] = field(default_factory=list)
     groups: list[GroupState] = field(default_factory=list)
     closed_thresholds: set[str] = field(default_factory=set)
-    # Estimated people per zone from fusion. Unused by the baseline planner.
+    # Estimated people per zone, waiting to cross each directed threshold and crossing it now.
+    # Edge keys look like "threshold_id:from_zone->to_zone". Until the fusion layer exists the
+    # simulator fills these from ground truth, so planner results are an upper bound.
     zone_counts: dict[str, float] = field(default_factory=dict)
+    edge_queues: dict[str, float] = field(default_factory=dict)
+    edge_transit: dict[str, float] = field(default_factory=dict)

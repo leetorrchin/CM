@@ -48,6 +48,7 @@ class BaselinePlanner:
             resolved[e.id] = route(e)
 
         groups = {g.id: g for g in state.groups}
+        by_id = {e.id: e for e in state.entities}
         assignments: list[dict] = []
         done: set[str] = set()
         for e in state.entities:
@@ -61,7 +62,7 @@ class BaselinePlanner:
             subject = {"kind": "entity", "id": e.id}
             g = groups.get(e.group_id) if e.group_id else None
             if g is not None:
-                members = [m for m in state.entities if m.id in set(g.member_ids)]
+                members = [by_id[i] for i in g.member_ids if i in by_id]
                 same = len(members) == len(g.member_ids) and all(
                     m.zone == e.zone and m.destination_id == e.destination_id
                     and m.needs_step_free == e.needs_step_free for m in members)

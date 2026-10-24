@@ -4,7 +4,7 @@ An algorithmic manager that determines the optimal flow of entities given their 
 
 crowD takes a drawn-out event space and a live picture of how full it is, then works out where people should go next so the crowd as a whole moves efficiently and safely. Think of it as traffic management for people. The first target is a large concert or festival, for both everyday flow (arrivals, stage changes, exits) and evacuation.
 
-> Status: Phase 0 (spec). Repo structure, JSON Schemas, an example multi-level venue, three scenarios, a venue graph compiler, a baseline shortest-path router a zone-level crowd simulator that writes replayable event logs, a procedural venue generator, emulated sensors and a run viewer are in place. See [PLAN.md](PLAN.md) for the build plan and milestones.
+> Status: early build. Venue schemas, a graph compiler, a zone-level crowd simulator (groups move as units), a procedural venue generator, emulated sensors, a run viewer, and three planners (baseline, queue-aware, flow, plus an adaptive wrapper) are in place. See [PLAN.md](PLAN.md) for the build plan and [docs/planners.md](docs/planners.md) for the planners.
 
 ## What it does
 

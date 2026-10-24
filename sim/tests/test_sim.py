@@ -77,3 +77,16 @@ def test_no_app_still_works():
 def test_groups_are_tracked():
     m = run_scenario(VENUE, SC / "stage-change.json", total=1000)
     assert m["groups"] > 0 and 0.0 <= m["groups_split_mean_share"] <= 1.0
+
+
+def test_groups_never_split_in_unit_mode():
+    m = run_scenario(VENUE, SC / "stage-change.json", total=1000)
+    assert m["groups_split_peak"] == 0
+
+
+@pytest.mark.parametrize("planner", ["queue-aware", "flow", "adaptive"])
+def test_optimising_planners_complete_and_do_not_lose_to_baseline_on_egress(planner):
+    base = run_scenario(VENUE, SC / "egress-end-of-night.json", total=2000, planner="baseline")
+    m = run_scenario(VENUE, SC / "egress-end-of-night.json", total=2000, planner=planner)
+    assert m["arrived_share"] == 1.0 and m["stuck"] == 0
+    assert m["travel_time_mean_s"] <= base["travel_time_mean_s"]

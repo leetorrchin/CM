@@ -131,6 +131,9 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 - **Done when:** baseline results are reproducible from a seed, congestion at the bottlenecks is visible in the visualiser, and swapping the emulated position source for a stub "real" one needs no changes outside configuration.
 
 ### Phase 3: Optimiser, groups and evacuation (4 to 6 weeks)
+
+**Progress:** groups-as-units, queue switching, queue-aware and flow planners, adaptive mode switching and the benchmark are done. Tuning and a 50,000-person scale test are done (decision 021). Left: hazards, fallback plan generator, cohesion cost measurement.
+
 - Solver steps 2 to 4, behind one interface so they can be swapped in the simulator.
 - Rolling horizon re-planning loop.
 - Group handling as super-entities, with the soft cohesion penalty.
@@ -202,4 +205,4 @@ Progress: done are the clock, event log, zone-level engine, emulated people with
 1. Done: example festival venue and the three scenarios (`scenarios/`).
 2. Write the venue schema and one example venue by hand, including the occupancy reading and group data models. (Done: see `schemas/` and `venues/`.)
 3. Repo skeleton (done: `schemas/`, `core/`, `sim/`, `connectors/`, `server/`, `docs/`). Still to do: CI running tests, and `viz/` project setup.
-4. Done: graph compiler and baseline router (`core/`), clock, event log, the first emulated crowd, venue generator and sensors (`sim/`), and the run viewer (`viz/`). Next: Phase 3, the congestion-aware optimiser, starting with a time-expanded flow planner for a single destination, benchmarked against the baseline on generated venues.
+4. Done: graph compiler and baseline router (`core/`), clock, event log, the first emulated crowd, venue generator and sensors (`sim/`), and the run viewer (`viz/`). Phase 3 is largely built: unit-based groups, queue switching, queue-aware, flow and adaptive planners (`core/optimiser.py`), and a benchmark (`docs/benchmarks.md`). Next: hazards, a fallback plan generator, a cohesion-cost measurement in normal mode, and an arrivals scenario for turnstiles.
